@@ -30,7 +30,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
  assert.equal(await page.locator('.name-label.has-task').count(),1);
  await page.selectOption('#iScope','person');await page.locator('[data-command="lunch"]').click();assert.equal(await page.locator('#iActiveTask').innerText(),'Review content <draft>');
  await page.locator('[data-command="work"]').click();await page.click('#bPause');
- await page.waitForFunction(()=>officeScene.snapshot().team.find(a=>a.initials==='KL').state==='meet',null,{timeout:120000});
+ await page.waitForFunction(()=>officeScene.snapshot().team.find(a=>a.initials==='T').state==='meet',null,{timeout:120000});
  assert.deepEqual((await snap()).camera,camera);
  for(const width of [375,768,1440]){
  await page.setViewportSize({width,height:900});await page.selectOption('#iScope','custom');

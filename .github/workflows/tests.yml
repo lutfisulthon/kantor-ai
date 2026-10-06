@@ -37,6 +37,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      # Mesa's llvmpipe renders WebGL much faster than Chromium's default software renderer (see tests/ci/playwright.cjs).
+      - run: sudo apt-get install -y --no-install-recommends xvfb libgl1-mesa-dri
       # Several tests save screenshots under the macOS path /private/tmp.
       - run: sudo mkdir -p /private/tmp && sudo chmod 1777 /private/tmp
       # Browser tests without their own server expect the static site on 4173 (see README),
@@ -46,7 +48,9 @@ jobs:
           nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory public > "$RUNNER_TEMP/server.log" 2>&1 &
           for i in $(seq 30); do curl -sf http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
           cat "$RUNNER_TEMP/server.log"; exit 1
-      - run: node tests/${{ matrix.test }}.cjs
+      - run: xvfb-run -a -s "-screen 0 1920x1080x24" node tests/${{ matrix.test }}.cjs
+        env:
+          PLAYWRIGHT_MODULE: ${{ github.workspace }}/tests/ci/playwright.cjs
       - name: Server log
         if: failure()
         run: cat "$RUNNER_TEMP/server.log"
