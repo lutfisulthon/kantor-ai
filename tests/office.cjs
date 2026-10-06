@@ -64,6 +64,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
  await page.click('#bZoomIn');await page.click('#bZoomOut');await page.click('#bRotate');await page.click('#bReset');
  await page.click('#bPause');assert.equal(await page.evaluate(()=>officeScene.snapshot().paused),true);await page.click('#bPause');
  await page.selectOption('#teamSelect','Rizky Hakim');await page.click('#iEyes');
+ // The camera moves into the character on the next animation frame.
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  const eyes=await page.evaluate(()=>officeScene.snapshot());assert.deepEqual(eyes.follow,{name:'Rizky Hakim',mode:'eyes'});
  const fgAt=eyes.team.find(p=>p.name==='Rizky Hakim').position;
  assert.ok(Math.hypot(...eyes.cameraPosition.map((v,i)=>v-fgAt[i]))<3,'eye camera sits in the character');
