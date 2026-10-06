@@ -99,7 +99,7 @@ Model bawaan adalah `claude-sonnet-5-5`; ganti dengan `ANTHROPIC_MODEL` di `.env
 
 ## Pemeriksaan browser
 
-`npm ci` lalu `npx playwright install chromium` memasang Playwright yang sama dengan CI. Tes browser yang tidak menyalakan server sendiri memerlukan server di port 4173 (`PORT=4173 npm start`). Beberapa tes menyimpan tangkapan layar di `/private/tmp`; di Linux buat direktori itu lebih dulu.
+`npm ci` lalu `npx playwright install chromium` memasang Playwright yang sama dengan CI. Tes browser yang tidak menyalakan server sendiri memerlukan situs statis di port 4173 (perintah `python3 -m http.server` di atas), sama seperti CI. Beberapa tes menyimpan tangkapan layar di `/private/tmp`; di Linux buat direktori itu lebih dulu.
 
 `tests/avatar-stairs.cjs` memeriksa varian avatar, inisial, kompatibilitas tugas, posisi 3D saat naik/turun tangga, jeda, perubahan tujuan, kamera yang tetap, musik, volume tersimpan, serta layout 375/768/1440px. Jalankan dengan `node tests/avatar-stairs.cjs`; konfigurasi Playwright sama seperti tes di bawah. `OFFICE_URL` dapat digunakan untuk alamat server selain port 4173.
 

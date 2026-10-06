@@ -39,11 +39,11 @@ jobs:
       - run: npx playwright install --with-deps chromium
       # Several tests save screenshots under the macOS path /private/tmp.
       - run: sudo mkdir -p /private/tmp && sudo chmod 1777 /private/tmp
-      # Some browser tests expect a server already running on port 4173.
-      - name: Start server on 4173
+      # Browser tests without their own server expect the static site on 4173 (see README),
+      # so tasks stay in the browser instead of going to the dry-run agents.
+      - name: Serve public/ on 4173
         run: |
-          mkdir -p "$RUNNER_TEMP/data"
-          PORT=4173 DATA_DIR="$RUNNER_TEMP/data" ENV_FILE=/nonexistent nohup node server/server.js > "$RUNNER_TEMP/server.log" 2>&1 &
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory public > "$RUNNER_TEMP/server.log" 2>&1 &
           for i in $(seq 30); do curl -sf http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
           cat "$RUNNER_TEMP/server.log"; exit 1
       - run: node tests/${{ matrix.test }}.cjs
