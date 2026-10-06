@@ -18,7 +18,9 @@
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
-  const PAPER = 0xebe5d8, CARD = 0xf7f3eb, INK = 0x2a2622, BALSA = 0xdebd8e, DARK = 0x4a453e, SCREEN = 0xa9c6c9, ACCENT = 0x385747;
+  const PAPER = 0xe6ebf2, CARD = 0xf6f8fb, INK = 0x2a2622, BALSA = 0xdebd8e, DARK = 0x4a453e, SCREEN = 0xa9c6c9, ACCENT = 0x0a2a5c;
+  // Komdigi palette, approximated from the ministry's public logo colours: horizon blue, foundation red and sun gold on navy.
+  const NAVY = 0x0a2a5c, HORIZON = 0x1565c0, MERAH = 0xc8102e, GOLD = 0xf2a900;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, .1, 500);
@@ -35,10 +37,10 @@
     4: {name:'Rooftop', title:'Take a break upstairs.', description:'A garden terrace with a pergola lounge, ping pong, bean bags, a swing, chess, yoga mats, billiards and a coffee bar.'},
   };
   const GROUPS = {
-    leadership: {name:'Leadership', x:-5.5, z:-3.5, color:0x2f4a6b},
-    marketing: {name:'Marketing & Business', x:5.5, z:-3.5, color:0xb4623a},
-    engineering: {name:'Engineering & Design', x:-5.5, z:6.5, color:0x3f7a58},
-    service: {name:'Customer Service', x:5.5, z:6.5, color:0x74598c}
+    leadership: {name:'Leadership', x:-5.5, z:-3.5, color:0x0a2a5c},
+    marketing: {name:'Marketing & Business', x:5.5, z:-3.5, color:0xb8322a},
+    engineering: {name:'Engineering & Design', x:-5.5, z:6.5, color:0x1f6fc0},
+    service: {name:'Customer Service', x:5.5, z:6.5, color:0x0e7490}
   };
   const TEAM = [
     {n:'Koh Arman', initials:'KA', gender:'male', role:'CEO', group:'leadership'},
@@ -106,6 +108,11 @@
       const a=i*2.4,leaf=decorate('plants',oval(.32*scale,.68*scale,.12*scale,i%2?0x64825b:0x839769,x+Math.cos(a)*.25*scale,y+(.75+i*.1)*scale,z+Math.sin(a)*.25*scale));
       leaf.rotation.set(.35, a,Math.sin(a)*.6);
     }
+  }
+  // Indoor Merah Putih on a gold-tipped pole with a weighted base.
+  function flagpole(x,z,parent=root){
+    cylinder(.28,.32,.08,DARK,x,0,z,parent);cylinder(.025,.025,2.5,0xd8c48a,x,.08,z,parent);oval(.06,.06,.06,GOLD,x,2.62,z,parent);
+    box(.02,.32,.9,MERAH,x,2.15,z+.47,parent);box(.02,.32,.9,0xfafafa,x,1.83,z+.47,parent);
   }
   function chair(x,z,f,color=DARK) {
     cylinder(.055,.15,.46,0x595d54,x,0,z);
@@ -184,7 +191,7 @@
     if(level===1)box(16,.28,.22,CARD,-8,0,12);else box(32,.28,.22,CARD,0,0,12);
     if(level===2||level===3){
       for(let row=0;row<24;row++)for(let col=0;col<4;col++){
-        box(7.98,.003,.985,[0xe2cdb0,0xddc5a5,0xe8d5b9][(row+col)%3],-12+col*8,.032,-11.5+row);
+        box(7.98,.003,.985,[0xe3e6eb,0xdbdfe6,0xe9ecf0][(row+col)%3],-12+col*8,.032,-11.5+row);
       }
     }
     stairs(level);
@@ -222,7 +229,7 @@
     for(const z of [2.8,4.2]){const w=cylinder(.3,.3,.16,DARK,x,.12,z);w.rotation.z=Math.PI/2;}
     box(.45,.4,1.3,0x8a5a3c,x,.42,3.5);box(.48,.12,.8,DARK,x,.85,3.6);box(.8,.06,.08,DARK,x,1.05,2.8);
   }
-  textPlane('ENTRANCE',7,11,4);
+  textPlane('ENTRANCE',7,11,4);flagpole(-1,10.6);
   restroom(-14.5,10.6,2.7,2.5,'-z');
 
   // Floor 2: back counter, an island on a terracotta rug, one long table, a coffee bar and a reading corner.
@@ -308,15 +315,15 @@
   shell(3);
   const P3=passage(3);
   box(6.2,3.5,.22,CARD,-12.9,0,-12);
-  box(25.8,.9,.22,CARD,3.1,0,-12);box(25.8,.45,.22,CARD,3.1,3.05,-12);
+  box(25.8,.9,.22,NAVY,3.1,0,-12);box(25.8,.04,.24,GOLD,3.1,.9,-12);box(25.8,.45,.22,CARD,3.1,3.05,-12);
   for(let i=0;i<=6;i++)box(.2,2.15,.22,CARD,-9.8+i*25.8/6,.9,-12);
   box(25.8,2.15,.04,'glass',3.1,.9,-12.03);
   for(const z of [-3.5,6.5]){for(const x of [-15.8,15.8])box(.4,3.5,.4,CARD,x,0,z);box(31.6,.22,.3,CARD,0,3.28,z);}
   const desks={};
   for(const [key,group] of Object.entries(GROUPS)){
     const people=TEAM.filter(p=>p.group===key),cols=2,full=people.length>2;
-    // Each team sits on its own soft-coloured rug: sage, terracotta, lilac, slate.
-    decorate('rugs',mesh(softBox(8.6,.04,full?6.6:4.4),{leadership:0xb7c3cf,marketing:0xe0b8a6,engineering:0xb9c8a6,service:0xcdbfdc}[key],group.x,.02,group.z+(full?0:.9),root,false));
+    // Each team sits on its own soft-coloured rug in the Komdigi palette: navy, red, horizon blue, gold.
+    decorate('rugs',mesh(softBox(8.6,.04,full?6.6:4.4),{leadership:0xb9c7de,marketing:0xe6c0ba,engineering:0xb8d2ee,service:0xf0dca6}[key],group.x,.02,group.z+(full?0:.9),root,false));
     table(group.x,group.z,6.4,full?2.3:1.7);
     textPlane(group.name.toUpperCase(),group.x,group.z>0?10.35:.35,8);
     people.forEach((person,index)=>{
@@ -328,7 +335,7 @@
       desks[person.n]=seat(x,z,f,3,group.x<0?-10.5:key==='marketing'?9:10);
     });
     // Pendants hang from the ceiling beam above each team table.
-    for(const dx of [-1.6,1.6]){box(.03,.88,.03,DARK,group.x+dx,2.4,group.z);cylinder(.07,.34,.3,0x5f7d68,group.x+dx,2.12,group.z);oval(.16,.16,.16,0xfff1cf,group.x+dx,2.1,group.z);}
+    for(const dx of [-1.6,1.6]){box(.03,.88,.03,DARK,group.x+dx,2.4,group.z);cylinder(.07,.34,.3,NAVY,group.x+dx,2.12,group.z);oval(.16,.16,.16,0xfff1cf,group.x+dx,2.1,group.z);}
   }
   // Work board between Leadership and Marketing, readable and clickable from both sides.
   // It faces the front of the room so the default camera can read it.
@@ -343,7 +350,7 @@
   // Low shelf between Engineering and Customer Service keeps the room open while giving it a back and front.
   box(.6,1.15,5.2,BALSA,0,0,6.8);
   for(const y of [.38,.76])box(.62,.03,5.22,0xb89c70,0,y,6.8);
-  for(let i=0;i<10;i++)box(.4,.26+(i%3)*.04,.1+(i%2)*.06,[0x2f4a6b,CARD,0xb4623a,0x3f7a58,0x74598c][i%5],0,.42,4.6+i*.44);
+  for(let i=0;i<10;i++)box(.4,.26+(i%3)*.04,.1+(i%2)*.06,[NAVY,CARD,MERAH,HORIZON,GOLD][i%5],0,.42,4.6+i*.44);
   plant(0,5.2,.55,1.15);plant(0,8.4,.55,1.15);
   // Glass meeting room, back left.
   box(5.9,.02,5.3,0xe6ded0,-12.9,.02,-9.25);
@@ -426,18 +433,29 @@
   // Bookshelf against the window wall.
   box(3,2.1,.5,BALSA,4.6,0,-11.55);
   for(const y of [.7,1.4])box(2.9,.04,.46,0xb89c70,4.6,y,-11.5);
-  for(let i=0;i<16;i++){const row=i>>3;box(.14+(i%3)*.04,.46+(i%4)*.06,.34,[0x2f4a6b,CARD,0xb4623a,0x3f7a58,0x74598c,0xd9a441][i%6],3.35+(i%8)*.33,.06+row*.7,-11.5);}
+  for(let i=0;i<16;i++){const row=i>>3;box(.14+(i%3)*.04,.46+(i%4)*.06,.34,[NAVY,CARD,MERAH,HORIZON,0x0e7490,GOLD][i%6],3.35+(i%8)*.33,.06+row*.7,-11.5);}
   plant(5.4,-11.5,.35,1.44);plant(3.6,-11.5,.3,2.1);
-  // Quote panel, painted like the lettering on the reference walls.
+  // State wall, as in Indonesian ministry offices: a placeholder emblem between two portrait frames on a navy panel,
+  // with the Merah Putih on a pole beside it. The emblem and portraits are generic shapes, not official artwork.
   {
     const c=document.createElement('canvas');c.width=512;c.height=384;const ctx=c.getContext('2d');
-    ctx.fillStyle='#fbf8f2';ctx.fillRect(0,0,512,384);ctx.fillStyle='#2f3a33';ctx.font='600 58px Archivo, system-ui, sans-serif';
-    ['Good people','build great','work.'].forEach((line,i)=>ctx.fillText(line,40,110+i*72));
-    ctx.fillStyle='#b4623a';ctx.fillRect(40,316,70,6);
+    ctx.fillStyle='#0a2a5c';ctx.fillRect(0,0,512,384);
+    ctx.fillStyle='#c8102e';ctx.fillRect(0,0,512,10);ctx.fillStyle='#fff';ctx.fillRect(0,10,512,10);ctx.fillStyle='#f2a900';ctx.fillRect(0,20,512,3);
+    ctx.save();ctx.translate(256,96);ctx.fillStyle='#f2a900';ctx.beginPath();
+    for(let i=0;i<16;i++){const r=i%2?16:46,a=i*Math.PI/8-Math.PI/2;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);}ctx.fill();
+    ctx.strokeStyle='#f2a900';ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,58,0,Math.PI*2);ctx.stroke();ctx.restore();
+    for(const x of [70,330]){
+      ctx.fillStyle='#c9a24a';ctx.fillRect(x,58,112,150);ctx.fillStyle='#dfe7f2';ctx.fillRect(x+8,66,96,134);
+      ctx.fillStyle='#5a6780';ctx.beginPath();ctx.arc(x+56,118,22,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(x+56,200,40,40,0,Math.PI,0);ctx.fill();
+    }
+    ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='700 40px Archivo, system-ui, sans-serif';ctx.fillText('KOMUNIKASI & DIGITAL',256,272);
+    ctx.font='500 26px Archivo, system-ui, sans-serif';ctx.fillStyle='#c7d4e8';ctx.fillText('Melayani · Terhubung · Berdaulat',256,318);
+    ctx.fillStyle='#f2a900';ctx.fillRect(216,342,80,5);
     const texture=new THREE.CanvasTexture(c);texture.encoding=THREE.sRGBEncoding;
-    box(2.8,2.2,.14,CARD,-7.6,.4,-11.6);for(const s of [-1,1])box(.1,.4,.1,DARK,-7.6+s*1.2,0,-11.6);
+    box(2.8,2.2,.14,NAVY,-7.6,.4,-11.6);for(const s of [-1,1])box(.1,.4,.1,DARK,-7.6+s*1.2,0,-11.6);
     const sign=new THREE.Mesh(new THREE.PlaneGeometry(2.6,1.95),new THREE.MeshBasicMaterial({map:texture}));sign.position.set(-7.6,1.5,-11.52);root.add(sign);
   }
+  flagpole(-5.6,-11.2);
   plant(-9.3,-10.4,.9);plant(8.7,-11.2,1);plant(-.8,-11.3,.8);
   // Wooden planters with trailing leaves along the front windows.
   for(const x of [-6,6]){
@@ -591,8 +609,8 @@
   const FRAME=0xf6f4ef;
   for(let level=1;level<=4;level++){
     const y=floorY(level),h=FLOOR_GAP-.48,lg=new THREE.Group();facade.add(lg);facadeLevels[level]=lg;
-    // A white slab edge wraps each storey; it knows its level so a click on it enters that floor.
-    const edge=box(33.4,.56,25.4,FRAME,0,y-.54,0,lg);edge.userData.level=level;
+    // A navy slab edge with a thin gold rule wraps each storey, the ministry's colours on the facade; it knows its level so a click on it enters that floor.
+    const edge=box(33.4,.56,25.4,NAVY,0,y-.54,0,lg);box(33.5,.06,25.5,GOLD,0,y-.06,0,lg);edge.userData.level=level;
     if(level===4){
       // Rooftop: a glass balustrade with a white handrail on the parapet.
       // The left side stops at the stair door (z 5.5 to 8.5), where the rooftop door stands open.
@@ -639,7 +657,7 @@
   function applyOfficeMood(){
     const hour=new Date().getHours(),choice=window.officeLife.preferences.mood;
     const mood=window.officeStudio.settings.weather==='sunset'?'evening':choice==='auto'?(hour<6||hour>=19?'night':hour<12?'morning':hour<16?'afternoon':'evening'):choice;
-    const styles={morning:[0xece9df,0xffeed5,.8,.85],afternoon:[0xebe5d8,0xfff4dd,.85,1],evening:[0xe0c6ae,0xffc185,.6,.55],night:[0x28374a,0xaec6ed,.48,.24]};
+    const styles={morning:[0xe9eef5,0xffeed5,.8,.85],afternoon:[0xe6ebf2,0xfff4dd,.85,1],evening:[0xe0c6ae,0xffc185,.6,.55],night:[0x28374a,0xaec6ed,.48,.24]};
     const [sky,tint,fill,direct]=styles[mood];scene.background.set(sky);if(scene.fog)scene.fog.color.set(sky);ambient.intensity=fill;sun.color.set(tint);sun.intensity=direct;
     for(const {lighting} of eveningLights)lighting.visible=activeFloor===0||mood==='night'||mood==='evening';
     $('moodDescription').textContent=`${mood[0].toUpperCase()+mood.slice(1)} lighting${window.officeStudio.settings.weather==='sunset'?' · Sunset atmosphere':choice==='auto'?' · Your device’s local time':''}.`;
@@ -1679,7 +1697,7 @@
     ctx.fillStyle='#fbf8f2';ctx.fillRect(0,0,W,H);
     ctx.fillStyle='#1e2230';ctx.font='700 44px Archivo, system-ui, sans-serif';ctx.textBaseline='middle';ctx.fillText('WORK BOARD',36,48);
     ctx.fillStyle='#6b6f7b';ctx.font='500 28px Archivo, system-ui, sans-serif';ctx.textAlign='right';ctx.fillText(`${open.length} tasks`,W-36,50);ctx.textAlign='left';
-    ctx.fillStyle='#e8634a';ctx.fillRect(36,86,90,6);
+    ctx.fillStyle='#1565c0';ctx.fillRect(36,86,90,6);
     if(!open.length){ctx.fillStyle='#6b6f7b';ctx.font='500 34px Archivo, system-ui, sans-serif';ctx.fillText('No open tasks. Add one from Tasks.',36,230);}
     open.slice(0,5).forEach((task,i)=>{
       const y=150+i*70,person=TEAM.find(p=>p.n===task.assignee);
@@ -1700,7 +1718,7 @@
     const tasks=window.officeTasks.list(),priority={active:0,blocked:1,review:2,queued:3,done:4};
     for(const display of monitorDisplays){const task=tasks.filter(t=>t.assignee===display.member).sort((a,b)=>priority[a.status]-priority[b.status]||(b.updatedAt||b.createdAt).localeCompare(a.updatedAt||a.createdAt))[0];
       const state=task?{active:window.officeTasks.agentFor(display.member)?'Drafting':'In progress',blocked:'Needs decision',review:'Ready for review',queued:'Queued',done:'Finished'}[task.status]:'Idle';display.status=state;display.taskId=task?.id||null;
-      const ctx=display.canvas.getContext('2d');ctx.fillStyle='#24372d';ctx.fillRect(0,0,512,256);ctx.fillStyle='#f8f3e8';ctx.textBaseline='top';ctx.font='bold 28px Archivo, sans-serif';ctx.fillText(TEAM.find(p=>p.n===display.member)?.initials||'',24,20);ctx.font='bold 34px Archivo, sans-serif';ctx.fillText(state,24,76);ctx.font='24px Archivo, sans-serif';let title=task?.title||'Ready for a new task';while(ctx.measureText(title).width>460&&title.length>4)title=title.slice(0,-2);if(task&&title!==task.title)title+='…';ctx.fillText(title,24,138);ctx.font='20px Archivo, sans-serif';ctx.fillText(task?.by==='dry-run'?'DRY RUN · Example draft':'Click to open tasks',24,210);display.texture.needsUpdate=true;
+      const ctx=display.canvas.getContext('2d');ctx.fillStyle='#0a2a5c';ctx.fillRect(0,0,512,256);ctx.fillStyle='#f8f3e8';ctx.textBaseline='top';ctx.font='bold 28px Archivo, sans-serif';ctx.fillText(TEAM.find(p=>p.n===display.member)?.initials||'',24,20);ctx.font='bold 34px Archivo, sans-serif';ctx.fillText(state,24,76);ctx.font='24px Archivo, sans-serif';let title=task?.title||'Ready for a new task';while(ctx.measureText(title).width>460&&title.length>4)title=title.slice(0,-2);if(task&&title!==task.title)title+='…';ctx.fillText(title,24,138);ctx.font='20px Archivo, sans-serif';ctx.fillText(task?.by==='dry-run'?'DRY RUN · Example draft':'Click to open tasks',24,210);display.texture.needsUpdate=true;
     }
   }
   function drawStats(){
@@ -1771,7 +1789,7 @@
     appearance={...settings};
     const palette={chairs:{sage:0x82967b,clay:0xc28669},rugs:{sand:0xd6c7ac,slate:0xa3b1ba},plants:{lush:0x42694a,autumn:0xb87d46}};
     for(const kind of ['chairs','rugs','plants'])for(const entry of decorations[kind]){if(!entry.custom){entry.object.material=entry.object.material.clone();entry.custom=true;}const tint=palette[kind][settings[kind]];entry.object.material.color.copy(tint===undefined?entry.original:linear(tint));}
-    const ctx=posterCanvas.getContext('2d');ctx.fillStyle=settings.poster==='details'?'#e5d7c0':'#e1e8d9';ctx.fillRect(0,0,640,400);ctx.fillStyle='#385747';ctx.font='700 50px Archivo, sans-serif';ctx.textAlign='center';const words=settings.poster==='details'?['Care for','the details.']:['Make room','for ideas.'];words.forEach((line,i)=>ctx.fillText(line,320,170+i*70));posterTexture.needsUpdate=true;
+    const ctx=posterCanvas.getContext('2d');ctx.fillStyle=settings.poster==='details'?'#fbefc9':'#e3ecf8';ctx.fillRect(0,0,640,400);ctx.fillStyle='#0a2a5c';ctx.font='700 50px Archivo, sans-serif';ctx.textAlign='center';const words=settings.poster==='details'?['Care for','the details.']:['Make room','for ideas.'];words.forEach((line,i)=>ctx.fillText(line,320,170+i*70));posterTexture.needsUpdate=true;
     rain.visible=settings.weather==='rain';stepRain(0);applyOfficeMood();
   }
   const projected=new THREE.Vector3(),world=new THREE.Vector3();let last=performance.now();
