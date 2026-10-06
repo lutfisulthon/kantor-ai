@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -14,79 +14,79 @@
   <link rel="stylesheet" href="studio.css">
 </head>
 <body class="ui">
-  <canvas id="c" aria-label="Interactive model of a four-floor office"></canvas>
+  <canvas id="c" aria-label="Model interaktif kantor empat lantai"></canvas>
   <div id="labels"></div>
   <header id="header">
     <div id="brand"><span class="brand-mark" aria-hidden="true"><img src="logo-bblsdm.png" alt="" width="40" height="40"></span><div class="brand-name"><strong>BBLSDM Komdigi Makassar</strong><span class="brand-meta">13 pegawai · 4 lantai</span></div><span class="brand-tagline">Kantor virtual<br>untuk kerja bersama</span></div>
     <div class="header-card">
-      <div class="team-picker"><label for="teamSelect">Team member</label><select id="teamSelect"><option value="">Pick initials</option></select></div>
-      <div id="teamFaces" aria-label="Team members"></div>
+      <div class="team-picker"><label for="teamSelect">Anggota tim</label><select id="teamSelect"><option value="">Pilih inisial</option></select></div>
+      <div id="teamFaces" aria-label="Anggota tim"></div>
       <button id="bLog" class="btn" aria-controls="log" aria-expanded="true">Log</button>
-      <button id="bTasks" class="btn primary">Tasks <span id="taskCount">0</span></button>
-      <button id="bLife" class="btn">Office life</button>
+      <button id="bTasks" class="btn primary">Tugas <span id="taskCount">0</span></button>
+      <button id="bLife" class="btn">Kehidupan kantor</button>
     </div>
   </header>
-  <nav id="floors" aria-label="Choose a floor">
-    <p class="nav-title">Building section</p>
+  <nav id="floors" aria-label="Pilih lantai">
+    <p class="nav-title">Bagian gedung</p>
     <div class="section-stack">
-      <button data-floor="4"><span class="floor-number">FL.04</span><span>Rooftop<small>Fresh air & breaks</small></span></button>
-      <button data-floor="3" aria-pressed="true"><span class="floor-number">FL.03</span><span>Workspace<small>The whole team</small></span></button>
-      <button data-floor="2"><span class="floor-number">FL.02</span><span>Kitchen & dining<small>Shared tables</small></span></button>
-      <button data-floor="1"><span class="floor-number">FL.01</span><span>Barber & parking<small>Entrance</small></span></button>
+      <button data-floor="4"><span class="floor-number">FL.04</span><span>Rooftop<small>Udara segar & rehat</small></span></button>
+      <button data-floor="3" aria-pressed="true"><span class="floor-number">FL.03</span><span>Ruang kerja<small>Seluruh tim</small></span></button>
+      <button data-floor="2"><span class="floor-number">FL.02</span><span>Dapur & ruang makan<small>Meja bersama</small></span></button>
+      <button data-floor="1"><span class="floor-number">FL.01</span><span>Barber & parkir<small>Pintu masuk</small></span></button>
     </div>
-    <button data-floor="0" class="building-button">View whole building</button>
+    <button data-floor="0" class="building-button">Lihat seluruh gedung</button>
   </nav>
   <section id="floorCaption" aria-live="polite">
-    <div class="tb-head"><span>BBLSDM Komdigi Makassar</span><span id="floorKicker">Sheet 03 / 04</span></div>
-    <h1 id="floorTitle">Room for everyone.</h1>
-    <p id="floorDescription">An open floor with four desk groups, a glass meeting room, phone booths, a pantry, a lounge and a prayer room.</p>
-    <p class="tb-foot">Interpreted floor plan · illustrative characters</p>
+    <div class="tb-head"><span>BBLSDM Komdigi Makassar</span><span id="floorKicker">Lembar 03 / 04</span></div>
+    <h1 id="floorTitle">Ruang untuk semua.</h1>
+    <p id="floorDescription">Lantai terbuka dengan empat kelompok meja, ruang rapat kaca, phone booth, pantry, lounge, dan musholla.</p>
+    <p class="tb-foot">Denah interpretasi · karakter ilustratif</p>
   </section>
   <section id="log" class="panel" aria-labelledby="logHeading">
-    <div class="log-head"><h2 id="logHeading">Office log</h2><span>Simulated activity</span></div>
-    <div id="logStats" class="log-stats" aria-label="Task summary"></div>
+    <div class="log-head"><h2 id="logHeading">Log kantor</h2><span>Aktivitas simulasi</span></div>
+    <div id="logStats" class="log-stats" aria-label="Ringkasan tugas"></div>
     <button type="button" id="decisions" class="decisions" hidden></button>
-    <p id="logEmpty">No activity yet. The team starts moving on its own shortly.</p>
+    <p id="logEmpty">Belum ada aktivitas. Tim akan mulai bergerak sendiri sebentar lagi.</p>
     <ol id="logList"></ol>
   </section>
-  <div id="followBar" class="panel" role="group" aria-label="Character camera" hidden><span id="followName"></span><button class="btn" id="fEyes" aria-pressed="false">Eyes</button><button class="btn" id="fChase" aria-pressed="false">Behind</button><button class="btn" id="fExit">Exit camera</button></div>
-  <section id="info" class="panel" aria-label="Team member details" hidden></section>
-  <div id="sceneStatus" role="status">Loading the office model…</div>
+  <div id="followBar" class="panel" role="group" aria-label="Kamera karakter" hidden><span id="followName"></span><button class="btn" id="fEyes" aria-pressed="false">Mata</button><button class="btn" id="fChase" aria-pressed="false">Belakang</button><button class="btn" id="fExit">Keluar kamera</button></div>
+  <section id="info" class="panel" aria-label="Detail anggota tim" hidden></section>
+  <div id="sceneStatus" role="status">Memuat model kantor…</div>
   <footer id="controls" class="panel">
-    <div class="simulation-controls"><button class="btn" id="bPause" aria-pressed="false">Pause</button><button class="btn" id="bRoutine" aria-pressed="true">Routine: on</button><button class="btn" id="bLunch">Lunch</button><button class="btn" id="bRoof">To the rooftop</button><button class="btn" id="bPray">Prayer time</button><button class="btn" id="bWork">Back to work</button></div>
-    <div class="camera-controls"><button class="btn" id="bZoomIn" aria-label="Zoom in">+</button><button class="btn" id="bZoomOut" aria-label="Zoom out">−</button><button class="btn" id="bRotate" aria-label="Rotate camera">Rotate</button><button class="btn" id="bReset">Reset</button><button class="btn" id="bMusic" aria-pressed="false" aria-label="Play relaxing music">Music</button><label class="music-volume" for="musicVolume">Vol.<input type="range" id="musicVolume" min="0" max="100" value="25" aria-label="Music volume"></label></div>
+    <div class="simulation-controls"><button class="btn" id="bPause" aria-pressed="false">Jeda</button><button class="btn" id="bRoutine" aria-pressed="true">Rutinitas: nyala</button><button class="btn" id="bLunch">Makan siang</button><button class="btn" id="bRoof">Ke rooftop</button><button class="btn" id="bPray">Waktu salat</button><button class="btn" id="bWork">Kembali bekerja</button></div>
+    <div class="camera-controls"><button class="btn" id="bZoomIn" aria-label="Perbesar">+</button><button class="btn" id="bZoomOut" aria-label="Perkecil">−</button><button class="btn" id="bRotate" aria-label="Putar kamera">Putar</button><button class="btn" id="bReset">Atur ulang</button><button class="btn" id="bMusic" aria-pressed="false" aria-label="Putar musik santai">Musik</button><label class="music-volume" for="musicVolume">Vol.<input type="range" id="musicVolume" min="0" max="100" value="25" aria-label="Volume musik"></label></div>
   </footer>
-  <p id="cameraHint">Drag to rotate · Shift + drag or right-click to pan · Scroll or pinch to zoom · Arrow keys to rotate</p>
+  <p id="cameraHint">Seret untuk memutar · Shift + seret atau klik kanan untuk menggeser · Scroll atau cubit untuk zoom · Tombol panah untuk memutar</p>
   <dialog id="taskDialog" aria-labelledby="taskHeading">
-    <header class="task-header"><div><h1 id="taskHeading">Office tasks</h1><p>Manage your team's work in the virtual office.</p></div><button type="button" id="closeTasks">Close</button></header>
-    <p class="task-note" id="taskNote">Status is changed by hand. Characters are a simulation and do not run AI yet.</p>
+    <header class="task-header"><div><h1 id="taskHeading">Tugas kantor</h1><p>Kelola pekerjaan tim di kantor virtual.</p></div><button type="button" id="closeTasks">Tutup</button></header>
+    <p class="task-note" id="taskNote">Status diubah secara manual. Karakter adalah simulasi dan belum menjalankan AI.</p>
     <p id="taskFeedback" role="status" aria-live="polite"></p>
     <div class="task-layout">
-      <form id="taskForm"><h2>Create a task</h2><label for="taskTitle">Task</label><input id="taskTitle" required maxlength="160" placeholder="Example: Draft the content calendar">
-        <label for="taskAssignee">Assignee</label><select id="taskAssignee" required></select>
-        <label for="taskBrief">Instructions <span>(optional)</span></label><textarea id="taskBrief" rows="4" maxlength="5000" placeholder="Describe what is needed and the expected result"></textarea>
-        <button class="task-primary" type="submit">Add task</button><p class="task-note" id="saveNote">Saved in this browser. Export tasks to keep a copy.</p><button type="button" id="exportTasks">Export tasks</button>
+      <form id="taskForm"><h2>Buat tugas</h2><label for="taskTitle">Tugas</label><input id="taskTitle" required maxlength="160" placeholder="Contoh: Susun kalender konten">
+        <label for="taskAssignee">Penanggung jawab</label><select id="taskAssignee" required></select>
+        <label for="taskBrief">Instruksi <span>(opsional)</span></label><textarea id="taskBrief" rows="4" maxlength="5000" placeholder="Jelaskan kebutuhan dan hasil yang diharapkan"></textarea>
+        <button class="task-primary" type="submit">Tambah tugas</button><p class="task-note" id="saveNote">Tersimpan di browser ini. Ekspor tugas untuk menyimpan salinan.</p><button type="button" id="exportTasks">Ekspor tugas</button>
       </form>
-      <section aria-labelledby="taskListHeading"><h2 id="taskListHeading">Task list</h2>
-        <div class="task-filters"><div><label for="taskFilter">Status</label><select id="taskFilter"><option value="all">All statuses</option><option value="queued">Queued</option><option value="active">In progress</option><option value="blocked">Needs decision</option><option value="review">Needs review</option><option value="done">Done</option></select></div><div><label for="agentFilter">Assignee</label><select id="agentFilter"><option value="all">All characters</option></select></div></div>
+      <section aria-labelledby="taskListHeading"><h2 id="taskListHeading">Daftar tugas</h2>
+        <div class="task-filters"><div><label for="taskFilter">Status</label><select id="taskFilter"><option value="all">Semua status</option><option value="queued">Antre</option><option value="active">Dikerjakan</option><option value="blocked">Perlu keputusan</option><option value="review">Perlu ditinjau</option><option value="done">Selesai</option></select></div><div><label for="agentFilter">Penanggung jawab</label><select id="agentFilter"><option value="all">Semua karakter</option></select></div></div>
         <p id="taskSummary"></p><div id="taskList"></div>
       </section>
     </div>
   </dialog>
   <dialog id="lifeDialog" aria-labelledby="lifeHeading">
-    <header class="task-header"><div><h1 id="lifeHeading">Office life</h1><p>Small rituals, shared ideas and division briefs.</p></div><button id="closeLife" type="button">Close</button></header>
+    <header class="task-header"><div><h1 id="lifeHeading">Kehidupan kantor</h1><p>Kebiasaan kecil, ide bersama, dan arahan divisi.</p></div><button id="closeLife" type="button">Tutup</button></header>
     <p id="lifeFeedback" role="status"></p>
-    <div class="studio-shortcuts"><button id="openResults" type="button">Work board</button><button id="openReview" type="button">Review meeting</button><a href="#officeAppearance">Appearance & tours</a></div>
+    <div class="studio-shortcuts"><button id="openResults" type="button">Papan kerja</button><button id="openReview" type="button">Rapat tinjauan</button><a href="#officeAppearance">Tampilan & tur</a></div>
     <div class="life-layout">
-      <section><h2>The everyday office</h2><label for="officeMood">Lighting</label><select id="officeMood"><option value="auto">Follow local time</option><option value="morning">Morning</option><option value="afternoon">Afternoon</option><option value="evening">Evening</option><option value="night">Night</option></select><p id="moodDescription"></p><label class="life-check"><input type="checkbox" id="celebrations" checked> Celebrate finished tasks</label><button id="petCat" type="button">Pet the office cat</button><p id="catStatus">Meet Moka, our office cat.</p><h3>Team habits</h3><ul id="personalityList"></ul></section>
-      <section><h2>Coffee break</h2><form id="coffeeForm"><label for="coffeeFirst">First person</label><select id="coffeeFirst" required></select><label for="coffeeSecond">Second person</label><select id="coffeeSecond" required></select><label for="coffeeTopic">Topic or task to discuss</label><textarea id="coffeeTopic" maxlength="3000" rows="3" placeholder="Paste the draft or describe the question"></textarea><label class="life-check"><input type="checkbox" id="coffeeAI"> Ask both AI agents for feedback</label><p id="coffeeAvailability"></p><button type="submit">Invite for coffee</button></form><pre id="coffeeNotes" tabindex="0"></pre><button id="saveCoffee" type="button" hidden>Download notes</button></section>
-      <section><h2>Division brief</h2><form id="divisionForm"><label for="briefDivision">Division</label><select id="briefDivision"></select><label for="divisionGoal">Shared goal</label><input id="divisionGoal" required maxlength="160" placeholder="Prepare our new product launch"><label for="divisionContext">Facts, audience and expected result</label><textarea id="divisionContext" required maxlength="4000" rows="4"></textarea><button type="submit">Preview task allocation</button></form><div id="divisionPreview"></div><button id="createDivision" type="button" hidden>Create these tasks</button></section>
-      <section id="officeAppearance"><h2>Appearance & tours</h2><div class="studio-options"><div><h3>Decorations</h3><label for="chairStyle">Chairs</label><select id="chairStyle"><option value="original">Team colours</option><option value="sage">Sage</option><option value="clay">Terracotta</option></select><label for="rugStyle">Carpets</label><select id="rugStyle"><option value="original">Team colours</option><option value="sand">Warm sand</option><option value="slate">Slate</option></select><label for="plantStyle">Plant leaves</label><select id="plantStyle"><option value="original">Original greens</option><option value="lush">Deep green</option><option value="autumn">Autumn tones</option></select><label for="posterStyle">Workspace poster</label><select id="posterStyle"><option value="ideas">Make room for ideas</option><option value="details">Care for the details</option></select></div><div><h3>Weather</h3><label for="officeWeather">Outside the windows</label><select id="officeWeather"><option value="clear">Clear</option><option value="rain">Rain</option><option value="sunset">Sunset</option></select><p>Sunset adds evening light. Rain falls outside the building.</p><button id="rainSound" type="button" aria-pressed="false">Play rain sound</button><label for="rainVolume">Rain volume</label><input id="rainVolume" type="range" min="0" max="100" value="25"><h3>Camera tours</h3><label for="tourChoice">Route</label><select id="tourChoice"><option value="workspace">Around the workspace</option><option value="cat">Follow Moka</option><option value="building">Around the building</option></select><p>Drag, use the camera controls or press Escape to stop. Reduced motion uses a still view.</p><button id="startTour" type="button">Start camera tour</button></div></div><p id="studioFeedback" role="status"></p></section>
+      <section><h2>Kantor sehari-hari</h2><label for="officeMood">Pencahayaan</label><select id="officeMood"><option value="auto">Ikuti waktu setempat</option><option value="morning">Pagi</option><option value="afternoon">Siang</option><option value="evening">Sore</option><option value="night">Malam</option></select><p id="moodDescription"></p><label class="life-check"><input type="checkbox" id="celebrations" checked> Rayakan tugas yang selesai</label><button id="petCat" type="button">Elus kucing kantor</button><p id="catStatus">Kenalan dengan Moka, kucing kantor kita.</p><h3>Kebiasaan tim</h3><ul id="personalityList"></ul></section>
+      <section><h2>Rehat kopi</h2><form id="coffeeForm"><label for="coffeeFirst">Orang pertama</label><select id="coffeeFirst" required></select><label for="coffeeSecond">Orang kedua</label><select id="coffeeSecond" required></select><label for="coffeeTopic">Topik atau tugas yang dibahas</label><textarea id="coffeeTopic" maxlength="3000" rows="3" placeholder="Tempel draf atau jelaskan pertanyaannya"></textarea><label class="life-check"><input type="checkbox" id="coffeeAI"> Minta masukan dari kedua agen AI</label><p id="coffeeAvailability"></p><button type="submit">Ajak ngopi</button></form><pre id="coffeeNotes" tabindex="0"></pre><button id="saveCoffee" type="button" hidden>Unduh catatan</button></section>
+      <section><h2>Arahan divisi</h2><form id="divisionForm"><label for="briefDivision">Divisi</label><select id="briefDivision"></select><label for="divisionGoal">Tujuan bersama</label><input id="divisionGoal" required maxlength="160" placeholder="Siapkan peluncuran produk baru kita"><label for="divisionContext">Fakta, sasaran, dan hasil yang diharapkan</label><textarea id="divisionContext" required maxlength="4000" rows="4"></textarea><button type="submit">Pratinjau pembagian tugas</button></form><div id="divisionPreview"></div><button id="createDivision" type="button" hidden>Buat tugas-tugas ini</button></section>
+      <section id="officeAppearance"><h2>Tampilan & tur</h2><div class="studio-options"><div><h3>Dekorasi</h3><label for="chairStyle">Kursi</label><select id="chairStyle"><option value="original">Warna tim</option><option value="sage">Sage</option><option value="clay">Terakota</option></select><label for="rugStyle">Karpet</label><select id="rugStyle"><option value="original">Warna tim</option><option value="sand">Pasir hangat</option><option value="slate">Abu batu</option></select><label for="plantStyle">Daun tanaman</label><select id="plantStyle"><option value="original">Hijau asli</option><option value="lush">Hijau tua</option><option value="autumn">Nuansa musim gugur</option></select><label for="posterStyle">Poster ruang kerja</label><select id="posterStyle"><option value="ideas">Beri ruang untuk ide</option><option value="details">Peduli pada detail</option></select></div><div><h3>Cuaca</h3><label for="officeWeather">Di luar jendela</label><select id="officeWeather"><option value="clear">Cerah</option><option value="rain">Hujan</option><option value="sunset">Senja</option></select><p>Senja menambah cahaya sore. Hujan turun di luar gedung.</p><button id="rainSound" type="button" aria-pressed="false">Putar suara hujan</button><label for="rainVolume">Volume hujan</label><input id="rainVolume" type="range" min="0" max="100" value="25"><h3>Tur kamera</h3><label for="tourChoice">Rute</label><select id="tourChoice"><option value="workspace">Keliling ruang kerja</option><option value="cat">Ikuti Moka</option><option value="building">Keliling gedung</option></select><p>Seret, pakai kontrol kamera, atau tekan Escape untuk berhenti. Mode gerakan dikurangi memakai tampilan diam.</p><button id="startTour" type="button">Mulai tur kamera</button></div></div><p id="studioFeedback" role="status"></p></section>
     </div>
   </dialog>
-  <dialog id="workBoardDialog" class="studio-dialog" aria-labelledby="workBoardHeading"><header class="task-header"><div><h1 id="workBoardHeading">Work board</h1><p>Real tasks, latest drafts and results from the office.</p></div><button id="closeWorkBoard" type="button">Close</button></header><label for="workBoardFilter">Show</label><select id="workBoardFilter"><option value="all">All work</option><option value="review">Ready for review</option><option value="blocked">Needs decision</option><option value="active">In progress</option><option value="done">Finished</option></select><div id="workBoardItems"></div></dialog>
-  <dialog id="reviewDialog" class="studio-dialog" aria-labelledby="reviewHeading"><header class="task-header"><div><h1 id="reviewHeading">Review meeting</h1><p>Discuss an existing draft. Approval stays in Tasks.</p></div><button id="closeReview" type="button">Close</button></header><form id="reviewMeetingForm"><label for="reviewTask">Draft to discuss</label><select id="reviewTask" required></select><pre id="reviewSource"></pre><fieldset id="reviewPeople"><legend>Invite people · up to 6 meeting seats</legend></fieldset><label for="reviewFocus">What should they check?</label><textarea id="reviewFocus" rows="3" maxlength="2000" placeholder="For example: clarity, missing facts and customer questions"></textarea><label class="studio-check"><input id="reviewUseAI" type="checkbox"> Ask connected agents for feedback</label><p id="reviewAvailability"></p><button type="submit">Start review meeting</button><button id="endReview" type="button">Send invitees back to work</button></form><p id="reviewFeedback" role="status"></p><pre id="reviewNotes" tabindex="0"></pre><button id="downloadReview" type="button" hidden>Download review notes</button></dialog>
-  <div id="tourBar" class="panel" hidden><span id="tourLabel"></span><button id="stopTour" class="btn" type="button">Stop tour</button></div>
+  <dialog id="workBoardDialog" class="studio-dialog" aria-labelledby="workBoardHeading"><header class="task-header"><div><h1 id="workBoardHeading">Papan kerja</h1><p>Tugas nyata, draf terbaru, dan hasil dari kantor.</p></div><button id="closeWorkBoard" type="button">Tutup</button></header><label for="workBoardFilter">Tampilkan</label><select id="workBoardFilter"><option value="all">Semua pekerjaan</option><option value="review">Siap ditinjau</option><option value="blocked">Perlu keputusan</option><option value="active">Dikerjakan</option><option value="done">Selesai</option></select><div id="workBoardItems"></div></dialog>
+  <dialog id="reviewDialog" class="studio-dialog" aria-labelledby="reviewHeading"><header class="task-header"><div><h1 id="reviewHeading">Rapat tinjauan</h1><p>Diskusikan draf yang ada. Persetujuan tetap di Tugas.</p></div><button id="closeReview" type="button">Tutup</button></header><form id="reviewMeetingForm"><label for="reviewTask">Draf yang dibahas</label><select id="reviewTask" required></select><pre id="reviewSource"></pre><fieldset id="reviewPeople"><legend>Undang orang · maksimal 6 kursi rapat</legend></fieldset><label for="reviewFocus">Apa yang perlu mereka periksa?</label><textarea id="reviewFocus" rows="3" maxlength="2000" placeholder="Misalnya: kejelasan, fakta yang kurang, dan pertanyaan pelanggan"></textarea><label class="studio-check"><input id="reviewUseAI" type="checkbox"> Minta masukan dari agen yang tersambung</label><p id="reviewAvailability"></p><button type="submit">Mulai rapat tinjauan</button><button id="endReview" type="button">Kembalikan undangan ke meja</button></form><p id="reviewFeedback" role="status"></p><pre id="reviewNotes" tabindex="0"></pre><button id="downloadReview" type="button" hidden>Unduh catatan tinjauan</button></dialog>
+  <div id="tourBar" class="panel" hidden><span id="tourLabel"></span><button id="stopTour" class="btn" type="button">Hentikan tur</button></div>
   <script src="tasks.js"></script>
   <script src="life.js"></script>
   <script src="studio.js"></script>

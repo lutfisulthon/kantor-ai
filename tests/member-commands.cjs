@@ -19,12 +19,12 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
  await page.locator('#iPeople input[value="Tari"]').check();await page.locator('[data-command="meet"]').click();
  s=await snap();assert.deepEqual(s.team.filter(a=>a.activity==='meet').map(a=>a.initials),['KR','T']);
  await page.locator('#iPeople input').evaluateAll(inputs=>inputs.forEach(i=>i.checked=true));
- await page.locator('[data-command="meet"]').click();assert.match(await page.locator('#sceneStatus').innerText(),/Only 6 places/);
+ await page.locator('[data-command="meet"]').click();assert.match(await page.locator('#sceneStatus').innerText(),/Hanya tersedia 6 tempat/);
  assert.equal((await snap()).team.filter(a=>a.activity==='meet').length,2);
  await page.locator('#iPeople input').evaluateAll(inputs=>inputs.forEach(i=>i.checked=false));
- await page.locator('[data-command="work"]').click();assert.match(await page.locator('#sceneStatus').innerText(),/at least one/);
+ await page.locator('[data-command="work"]').click();assert.match(await page.locator('#sceneStatus').innerText(),/setidaknya satu/);
  await page.click('#iTasks');await page.fill('#taskTitle','Review content <draft>');await page.fill('#taskBrief','Check captions with Tari');await page.click('#taskForm button[type=submit]');
- await page.getByRole('button',{name:'Start task',exact:true}).click();await page.keyboard.press('Escape');
+ await page.getByRole('button',{name:'Mulai tugas',exact:true}).click();await page.keyboard.press('Escape');
  await page.waitForFunction(()=>document.querySelector('#iActiveTask').textContent==='Review content <draft>');
  assert.match(await page.locator('#iTaskBrief').innerText(),/Check captions/);
  assert.equal(await page.locator('.name-label.has-task').count(),1);
@@ -37,8 +37,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
  assert.equal(await page.evaluate(()=>document.querySelector('#info').scrollWidth>document.querySelector('#info').clientWidth),false);
  await page.screenshot({path:`/private/tmp/kantor-member-${width}.png`});
  }
- await page.click('#iTasks');await page.locator('.task-item textarea').fill('Reviewed');await page.getByRole('button',{name:'Save result & finish'}).click();await page.keyboard.press('Escape');
- await page.waitForFunction(()=>document.querySelector('#iActiveTask').textContent==='No active task');assert.equal(await page.locator('.name-label.has-task').count(),0);
+ await page.click('#iTasks');await page.locator('.task-item textarea').fill('Reviewed');await page.getByRole('button',{name:'Simpan hasil & selesaikan'}).click();await page.keyboard.press('Escape');
+ await page.waitForFunction(()=>document.querySelector('#iActiveTask').textContent==='Tidak ada tugas aktif');assert.equal(await page.locator('.name-label.has-task').count(),0);
  assert.deepEqual(errors,[]);console.log('PASS: individual/division/custom commands, capacity, empty selection, meeting arrival, camera, live task state and 375/768/1440 layouts');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});

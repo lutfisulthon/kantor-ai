@@ -1,6 +1,6 @@
 (() => {
   const storageKey = 'kantor-ai.tasks.v1';
-  const states = {queued: 'Queued', active: 'In progress', blocked: 'Needs decision', review: 'Needs review', done: 'Done'};
+  const states = {queued: 'Antre', active: 'Dikerjakan', blocked: 'Perlu keputusan', review: 'Perlu ditinjau', done: 'Selesai'};
   const el = id => document.getElementById(id);
   let tasks = [], team = [], changed, locate;
   let storageHealthy = true;
@@ -8,7 +8,7 @@
   const drafts=new Map();
   const draftKey=(task,kind)=>`${kind}:${task.id}:${kind==='result'?'result':(task.version||0)}`;
   function draftRead(key){if(drafts.has(key))return drafts.get(key);try{return sessionStorage.getItem('kantor-draft:'+key)||'';}catch{return '';}}
-  function draftWrite(key,value){drafts.set(key,value);try{sessionStorage.setItem('kantor-draft:'+key,value);}catch{feedback('Draft is kept in this tab only; browser storage is unavailable.');}}
+  function draftWrite(key,value){drafts.set(key,value);try{sessionStorage.setItem('kantor-draft:'+key,value);}catch{feedback('Draf hanya tersimpan di tab ini; penyimpanan browser tidak tersedia.');}}
   function draftClear(key){drafts.delete(key);try{sessionStorage.removeItem('kantor-draft:'+key);}catch{}}
 
   // With the server running, tasks live there and some members are AI agents; without it, tasks stay in this browser.
@@ -19,11 +19,11 @@
   function feedback(message) { el('taskFeedback').textContent = message; }
   function persist(next) {
     if (!storageHealthy) {
-      feedback('Saved data cannot be read. Changes are blocked so the old data is not overwritten.');
+      feedback('Data tersimpan tidak dapat dibaca. Perubahan diblokir agar data lama tidak tertimpa.');
       return false;
     }
     try { localStorage.setItem(storageKey, JSON.stringify(next)); }
-    catch { feedback('Could not save. Check browser storage; the change was not applied.'); return false; }
+    catch { feedback('Gagal menyimpan. Periksa penyimpanan browser; perubahan tidak diterapkan.'); return false; }
     tasks = next;
     return true;
   }
@@ -32,7 +32,7 @@
     try{
       const response=await fetch(path,{method,headers:{'content-type':'application/json'},body:body&&JSON.stringify(body)});
       const data=await response.json().catch(()=>({}));
-      if(!response.ok)throw new Error(data.error||`Server error ${response.status}`);
+      if(!response.ok)throw new Error(data.error||`Galat server ${response.status}`);
       return data;
     }finally{if(write){writing--;mutation++;}}
   }
@@ -70,7 +70,7 @@
     const task = tasks.find(t => t.id === id);
     if (!task) return;
     if (status === 'active' && tasks.some(t => t.id !== id && t.assignee === task.assignee && t.status === 'active')) {
-      feedback(`${displayName(task.assignee)} already has an active task. Move it back to the queue or finish it first.`);
+      feedback(`${displayName(task.assignee)} sudah punya tugas aktif. Kembalikan ke antrean atau selesaikan dulu.`);
       return;
     }
     if (server) {
@@ -82,7 +82,7 @@
       changed(task.assignee, status, task.title);
     }
     if(status==='done')draftClear(draftKey(task,'result'));
-    render(); feedback(`Task status: ${states[status]}.`);
+    render(); feedback(`Status tugas: ${states[status]}.`);
     el('taskFilter').focus();
   }
   async function reassign(id, assignee) {
@@ -94,7 +94,7 @@
       const next = tasks.map(task => task.id === id ? {...task, assignee, status: task.status === 'done' ? 'done' : 'queued'} : task);
       if (!persist(next)) return;
     }
-    render(); feedback(`Task moved to ${displayName(assignee)}.`);
+    render(); feedback(`Tugas dipindahkan ke ${displayName(assignee)}.`);
   }
   async function reviewTask(task,action,comments=''){
     try{
@@ -104,42 +104,42 @@
         if(!persist(next))return;
         changed(task.assignee,action==='approve'?'done':'queued',task.title);
       }
-      draftClear(draftKey(task,'review'));render();feedback(action==='approve'?'Draft approved.':'Revision requested. The previous draft stays in history.');
+      draftClear(draftKey(task,'review'));render();feedback(action==='approve'?'Draf disetujui.':'Revisi diminta. Draf sebelumnya tetap ada di riwayat.');
     }catch(error){feedback(error.message);}
   }
   function reviewControls(task,article){
     article.append(node('div',task.result,'task-result'));
-    const approve=action('Approve & finish',()=>reviewTask(task,'approve'));approve.className='task-primary';article.append(approve);
-    const form=node('form'),label=node('label','Revision comments'),input=node('textarea'),key=draftKey(task,'review');
+    const approve=action('Setujui & selesaikan',()=>reviewTask(task,'approve'));approve.className='task-primary';article.append(approve);
+    const form=node('form'),label=node('label','Catatan revisi'),input=node('textarea'),key=draftKey(task,'review');
     input.id=`review-${task.id}`;label.htmlFor=input.id;input.required=true;input.maxLength=5000;input.rows=3;input.value=draftRead(key);
     input.oninput=()=>{input.setCustomValidity('');draftWrite(key,input.value);};
-    const submit=node('button','Request revision');submit.type='submit';
-    form.append(label,input,submit);form.onsubmit=e=>{e.preventDefault();if(!input.value.trim()){input.setCustomValidity('Describe the changes needed.');input.reportValidity();return;}reviewTask(task,'revise',input.value.trim());};article.append(form);
+    const submit=node('button','Minta revisi');submit.type='submit';
+    form.append(label,input,submit);form.onsubmit=e=>{e.preventDefault();if(!input.value.trim()){input.setCustomValidity('Jelaskan perubahan yang diperlukan.');input.reportValidity();return;}reviewTask(task,'revise',input.value.trim());};article.append(form);
   }
   // An agent that asked instead of guessing: show its questions and take the answers.
   async function answerTask(task,answer){
-    try{const saved=await call('PATCH',`/api/tasks/${task.id}`,{action:'answer',answer,version:task.version||0});apply(tasks.map(t=>t.id===task.id?saved:t));draftClear(draftKey(task,'answer'));render();feedback(`Answer sent. ${displayName(task.assignee)} picks the task up again.`);}
+    try{const saved=await call('PATCH',`/api/tasks/${task.id}`,{action:'answer',answer,version:task.version||0});apply(tasks.map(t=>t.id===task.id?saved:t));draftClear(draftKey(task,'answer'));render();feedback(`Jawaban terkirim. ${displayName(task.assignee)} melanjutkan tugasnya lagi.`);}
     catch(error){feedback(error.message);}
   }
   function answerControls(task,article){
-    article.append(node('p',`${displayName(task.assignee)} needs more information before drafting:`,'task-agent'),node('div',task.questions,'task-result task-questions'));
-    const form=node('form'),label=node('label','Your answer'),input=node('textarea'),key=draftKey(task,'answer');
+    article.append(node('p',`${displayName(task.assignee)} perlu informasi tambahan sebelum menyusun draf:`,'task-agent'),node('div',task.questions,'task-result task-questions'));
+    const form=node('form'),label=node('label','Jawaban Anda'),input=node('textarea'),key=draftKey(task,'answer');
     input.id=`answer-${task.id}`;label.htmlFor=input.id;input.required=true;input.maxLength=3000;input.rows=3;input.value=draftRead(key);
     input.oninput=()=>{input.setCustomValidity('');draftWrite(key,input.value);};
-    const submit=node('button','Send answer');submit.type='submit';submit.className='task-primary';
-    form.append(label,input,submit);form.onsubmit=e=>{e.preventDefault();if(!input.value.trim()){input.setCustomValidity('Write an answer first.');input.reportValidity();return;}answerTask(task,input.value.trim());};
+    const submit=node('button','Kirim jawaban');submit.type='submit';submit.className='task-primary';
+    form.append(label,input,submit);form.onsubmit=e=>{e.preventDefault();if(!input.value.trim()){input.setCustomValidity('Tulis jawaban terlebih dahulu.');input.reportValidity();return;}answerTask(task,input.value.trim());};
     article.append(form);
   }
   function agentActions(task, article, actions) {
     const agent = agentFor(task.assignee);
     if (task.status === 'blocked') answerControls(task, article);
     else if (task.status === 'queued' && task.error) {
-      article.append(node('p', `The agent could not finish: ${task.error}`, 'task-error'));
-      actions.append(action('Try again', () => update(task.id, 'queued')));
-    } else if (task.status === 'queued') article.append(node('p', 'Waiting for the AI agent to pick this up.', 'task-agent'));
-    else if (task.status === 'active') article.append(node('p', agent.mode === 'claude' ? 'The AI agent is working on this…' : 'Dry run in progress…', 'task-agent'));
+      article.append(node('p', `Agen tidak dapat menyelesaikan: ${task.error}`, 'task-error'));
+      actions.append(action('Coba lagi', () => update(task.id, 'queued')));
+    } else if (task.status === 'queued') article.append(node('p', 'Menunggu agen AI mengambil tugas ini.', 'task-agent'));
+    else if (task.status === 'active') article.append(node('p', agent.mode === 'claude' ? 'Agen AI sedang mengerjakan ini…' : 'Uji coba (dry run) berjalan…', 'task-agent'));
     else {
-      article.append(node('p', task.by === 'dry-run' ? 'Dry run result, not AI output. Review before use.' : task.by ? `Draft by Claude (${task.by}). Review before use.` : 'Result', 'task-agent'));
+      article.append(node('p', task.by === 'dry-run' ? 'Hasil uji coba (dry run), bukan keluaran AI. Tinjau sebelum dipakai.' : task.by ? `Draf oleh Claude (${task.by}). Tinjau sebelum dipakai.` : 'Hasil', 'task-agent'));
       if(task.status==='review')reviewControls(task,article);else article.append(node('div', task.result, 'task-result'));
     }
     article.append(actions);
@@ -151,44 +151,44 @@
     const list = el('taskList'); list.replaceChildren();
     const done = tasks.filter(t => t.status === 'done').length;
     el('taskCount').textContent = tasks.length - done;
-    el('taskSummary').textContent = `${tasks.length} tasks · ${done} done`;
+    el('taskSummary').textContent = `${tasks.length} tugas · ${done} selesai`;
     el('exportTasks').disabled = tasks.length === 0;
     const visible = tasks.filter(t => (el('taskFilter').value === 'all' || t.status === el('taskFilter').value) &&
       (el('agentFilter').value === 'all' || t.assignee === el('agentFilter').value));
-    if (!visible.length) list.append(node('p', tasks.length ? 'No tasks match this filter.' : 'No tasks yet. Add the first job for your team.', 'task-empty'));
+    if (!visible.length) list.append(node('p', tasks.length ? 'Tidak ada tugas yang cocok dengan filter ini.' : 'Belum ada tugas. Tambahkan pekerjaan pertama untuk tim Anda.', 'task-empty'));
     for (const task of visible) {
       const article = node('article', undefined, 'task-item');
       article.id=`task-${task.id}`;article.tabIndex=-1;
       const agent = agentFor(task.assignee);
-      article.append(node('h3', task.title), node('div', `${displayName(task.assignee)} · ${states[task.status]}${agent ? ` · AI agent${agent.mode === 'claude' ? ` · ${agent.model}` : ''}` : ''}`, 'task-meta'));
+      article.append(node('h3', task.title), node('div', `${displayName(task.assignee)} · ${states[task.status]}${agent ? ` · Agen AI${agent.mode === 'claude' ? ` · ${agent.model}` : ''}` : ''}`, 'task-meta'));
       if (task.brief) article.append(node('p', task.brief));
-      if(task.history?.length){const history=node('details'),summary=node('summary',`Draft history (${task.history.length})`);history.append(summary);task.history.forEach((draft,i)=>{history.append(node('h4',`Draft ${i+1} · ${draft.by||'Saved'}`));if(draft.feedback)history.append(node('p',`Revision brief: ${draft.feedback}`));history.append(node('div',draft.result,'task-result'));});article.append(history);}
+      if(task.history?.length){const history=node('details'),summary=node('summary',`Riwayat draf (${task.history.length})`);history.append(summary);task.history.forEach((draft,i)=>{history.append(node('h4',`Draf ${i+1} · ${draft.by||'Tersimpan'}`));if(draft.feedback)history.append(node('p',`Arahan revisi: ${draft.feedback}`));history.append(node('div',draft.result,'task-result'));});article.append(history);}
       const actions = node('div', undefined, 'task-actions');
       if (!team.some(person => person.n === task.assignee)) {
-        article.append(node('p', 'This assignee comes from an old prototype. Pick a team member to continue.'));
-        const select = node('select'); select.setAttribute('aria-label', `New assignee for ${task.title}`);
+        article.append(node('p', 'Penanggung jawab ini berasal dari prototipe lama. Pilih anggota tim untuk melanjutkan.'));
+        const select = node('select'); select.setAttribute('aria-label', `Penanggung jawab baru untuk ${task.title}`);
         for (const person of team) { const option = node('option', displayName(person.n)); option.value = person.n; select.append(option); }
-        actions.append(action('Move task', () => reassign(task.id, select.value)));
+        actions.append(action('Pindahkan tugas', () => reassign(task.id, select.value)));
         if (task.result) article.append(node('div', task.result, 'task-result'));
         article.append(select, actions); list.append(article); continue;
       }
-      actions.append(action('Show character', () => { el('taskDialog').close(); locate(task.assignee); }));
+      actions.append(action('Tunjukkan karakter', () => { el('taskDialog').close(); locate(task.assignee); }));
       if (agent) { agentActions(task, article, actions); list.append(article); continue; }
       if(task.status==='review'){reviewControls(task,article);article.append(actions);list.append(article);continue;}
-      if (task.status === 'queued') actions.append(action('Start task', () => update(task.id, 'active')));
+      if (task.status === 'queued') actions.append(action('Mulai tugas', () => update(task.id, 'active')));
       if (task.status === 'active') {
-        actions.append(action('Back to queue', () => update(task.id, 'queued')));
+        actions.append(action('Kembali ke antrean', () => update(task.id, 'queued')));
         const form = node('form');
-        const label = node('label', 'Result'); label.htmlFor = `result-${task.id}`;
+        const label = node('label', 'Hasil'); label.htmlFor = `result-${task.id}`;
         const input = node('textarea'); input.id = label.htmlFor; input.required = true; input.maxLength = 10000; input.rows = 3;
         const key=draftKey(task,'result');input.value=draftRead(key);
-        input.placeholder = 'Write the result or a document link before finishing the task';
-        const submit = node('button', 'Save result & finish'); submit.type = 'submit'; submit.className = 'task-primary';
+        input.placeholder = 'Tulis hasil atau tautan dokumen sebelum menyelesaikan tugas';
+        const submit = node('button', 'Simpan hasil & selesaikan'); submit.type = 'submit'; submit.className = 'task-primary';
         const footer = node('div', undefined, 'task-actions'); footer.append(submit);
         form.append(label, input, footer);
         form.onsubmit = event => {
           event.preventDefault();
-          if (!input.value.trim()) { input.setCustomValidity('Fill in the result first.'); input.reportValidity(); return; }
+          if (!input.value.trim()) { input.setCustomValidity('Isi hasilnya terlebih dahulu.'); input.reportValidity(); return; }
           update(task.id, 'done', input.value.trim());
         };
         input.oninput = () => {input.setCustomValidity('');draftWrite(key,input.value);};
@@ -213,15 +213,15 @@
     if (!list) return;
     // First visit with the server: carry over tasks this browser saved before, if the server has none.
     if (!list.length && storageHealthy && tasks.length) {
-      list = await call('POST', '/api/tasks/import', tasks).then(imported => { feedback(`${imported.length} tasks from this browser moved to the server.`); return imported; }).catch(() => list);
+      list = await call('POST', '/api/tasks/import', tasks).then(imported => { feedback(`${imported.length} tugas dari browser ini dipindahkan ke server.`); return imported; }).catch(() => list);
     }
     server = info;
     tasks = list;
     const names = Object.keys(info.members).map(displayName).join(', ');
     el('taskNote').textContent = info.mode === 'claude'
-      ? `${names} works with Claude and submits drafts for your review. Everyone else is a simulation; change their status by hand.`
-      : `${names} is connected in dry-run mode (no API key yet), so results are placeholders. Everyone else is a simulation; change their status by hand.`;
-    el('saveNote').textContent = 'Saved on the office server. Export tasks to keep a copy.';
+      ? `${names} bekerja dengan Claude dan mengirim draf untuk Anda tinjau. Anggota lain adalah simulasi; ubah statusnya secara manual.`
+      : `${names} tersambung dalam mode uji coba (dry run, belum ada kunci API), jadi hasilnya hanya contoh. Anggota lain adalah simulasi; ubah statusnya secara manual.`;
+    el('saveNote').textContent = 'Tersimpan di server kantor. Ekspor tugas untuk menyimpan salinan.';
     render();
     tasks.filter(t => t.status === 'active' && team.some(person => person.n === t.assignee)).forEach(t => changed(t.assignee));
     document.dispatchEvent(new CustomEvent('officetasks:server', {detail: info}));
@@ -236,9 +236,9 @@
   window.officeTasks = {
     openTask(id){const task=tasks.find(t=>t.id===id);if(!task)return;this.open(task.assignee,task.status);const article=document.getElementById(`task-${id}`);article?.scrollIntoView({block:'nearest'});article?.focus();},
     async createBatch(drafts) {
-      if (!Array.isArray(drafts) || !drafts.length || drafts.length > 13 || drafts.some(d => !d.title?.trim() || d.title.length > 160 || !team.some(p => p.n === d.assignee))) throw new Error('Invalid task allocation.');
+      if (!Array.isArray(drafts) || !drafts.length || drafts.length > 13 || drafts.some(d => !d.title?.trim() || d.title.length > 160 || !team.some(p => p.n === d.assignee))) throw new Error('Pembagian tugas tidak valid.');
       if (server) { const saved = await call('POST', '/api/tasks/batch', {tasks:drafts}); apply([...saved, ...tasks]); }
-      else { const added=drafts.map(d=>({id:crypto.randomUUID(),title:d.title,brief:d.brief||'',assignee:d.assignee,status:'queued',result:'',createdAt:new Date().toISOString()})); if(!persist([...added,...tasks])) throw new Error('Tasks could not be saved.'); }
+      else { const added=drafts.map(d=>({id:crypto.randomUUID(),title:d.title,brief:d.brief||'',assignee:d.assignee,status:'queued',result:'',createdAt:new Date().toISOString()})); if(!persist([...added,...tasks])) throw new Error('Tugas tidak dapat disimpan.'); }
       render();
     },
     activeFor: name => tasks.find(t => t.assignee === name && t.status === 'active'),
@@ -266,16 +266,16 @@
             new Set(parsed.filter(t => t.status === 'active').map(t => t.assignee)).size !== parsed.filter(t => t.status === 'active').length) throw new Error('Invalid task data');
           tasks = parsed;
         }
-      } catch { storageHealthy = false; feedback('Task data cannot be read. The old data is kept; changes are blocked.'); }
+      } catch { storageHealthy = false; feedback('Data tugas tidak dapat dibaca. Data lama tetap disimpan; perubahan diblokir.'); }
       for (const name of new Set(tasks.filter(task => !team.some(person => person.n === task.assignee)).map(task => task.assignee))) {
-        const option = node('option', `${name} (old prototype)`); option.value = name; el('agentFilter').append(option);
+        const option = node('option', `${name} (prototipe lama)`); option.value = name; el('agentFilter').append(option);
       }
       el('closeTasks').onclick = () => el('taskDialog').close();
       el('taskFilter').onchange = render; el('agentFilter').onchange = render;
       el('taskForm').onsubmit = async event => {
         event.preventDefault();
         const title = el('taskTitle').value.trim();
-        if (!title) { el('taskTitle').setCustomValidity('Enter a task name.'); el('taskTitle').reportValidity(); return; }
+        if (!title) { el('taskTitle').setCustomValidity('Masukkan nama tugas.'); el('taskTitle').reportValidity(); return; }
         const draft = {title, assignee: el('taskAssignee').value, brief: el('taskBrief').value.trim(), status: 'queued', result: ''};
         let task;
         if (server) {
@@ -287,13 +287,13 @@
         }
         el('taskTitle').value = ''; el('taskBrief').value = '';
         el('agentFilter').value = 'all'; el('taskFilter').value = 'all';
-        render(); feedback(`Task added for ${displayName(task.assignee)}${agentFor(task.assignee) ? '. The AI agent will pick it up.' : '.'}`); el('taskTitle').focus();
+        render(); feedback(`Tugas ditambahkan untuk ${displayName(task.assignee)}${agentFor(task.assignee) ? '. Agen AI akan mengambilnya.' : '.'}`); el('taskTitle').focus();
       };
       el('taskTitle').oninput = () => el('taskTitle').setCustomValidity('');
       el('exportTasks').onclick = () => {
         const url = URL.createObjectURL(new Blob([JSON.stringify(tasks, null, 2)], {type: 'application/json'}));
         const link = node('a'); link.href = url; link.download = 'kantor-ai-tasks.json'; link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000); feedback('Task copy exported.');
+        setTimeout(() => URL.revokeObjectURL(url), 1000); feedback('Salinan tugas diekspor.');
       };
       render();
       tasks.filter(t => t.status === 'active' && team.some(person => person.n === t.assignee)).forEach(t => changed(t.assignee));

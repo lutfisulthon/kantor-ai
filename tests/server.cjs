@@ -19,32 +19,32 @@ const waitFor=async(check,ms=20000)=>{const end=Date.now()+ms;while(Date.now()<e
   assert.ok([403,404].includes((await fetch('http://127.0.0.1:4181/..%2fserver%2fserver.js')).status),'no files outside public/');
   const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:4181');await page.waitForFunction(()=>window.officeScene);
-  await page.waitForFunction(()=>document.getElementById('taskNote').textContent.includes('dry-run'));
+  await page.waitForFunction(()=>document.getElementById('taskNote').textContent.includes('uji coba'));
   assert.equal(await page.evaluate(()=>[...document.querySelectorAll('.name-label.ai')].map(l=>l.textContent).join()),'KR,KS');
   // A task for KR is picked up and finished by the dry-run agent.
   await page.click('#bTasks');await page.fill('#taskTitle','Caption for the new menu');await page.selectOption('#taskAssignee','Kak Rani');await page.fill('#taskBrief','Friendly, Indonesian');await page.click('.task-primary');
-  await page.waitForFunction(()=>document.getElementById('taskList').innerText.includes('Dry run result'),null,{timeout:20000});
-  assert.match(await page.locator('.task-item > .task-result').first().innerText(),/DRY RUN/);
-  assert.match(await page.locator('#taskList').innerText(),/Needs review/);
+  await page.waitForFunction(()=>document.getElementById('taskList').innerText.includes('Hasil uji coba'),null,{timeout:20000});
+  assert.match(await page.locator('.task-item > .task-result').first().innerText(),/UJI COBA/);
+  assert.match(await page.locator('#taskList').innerText(),/Perlu ditinjau/);
   const firstDraft=(await api(4181,'/api/tasks')).body.find(t=>t.status==='review');
   await page.locator('textarea[id^="review-"]').fill('Make it shorter and more friendly');
-  await page.getByRole('button',{name:'Request revision',exact:true}).click();
+  await page.getByRole('button',{name:'Minta revisi',exact:true}).click();
   await page.waitForFunction(()=>officeTasks.list().some(t=>t.status==='review'&&t.history?.length===2),null,{timeout:20000});
   assert.match(await page.locator('.task-item > .task-result').last().innerText(),/Make it shorter/);
   assert.equal((await api(4181,`/api/tasks/${firstDraft.id}`,{method:'PATCH',body:JSON.stringify({action:'approve',version:firstDraft.version})})).status,409,'an older draft cannot approve the revision');
-  await page.getByRole('button',{name:'Approve & finish',exact:true}).click();
+  await page.getByRole('button',{name:'Setujui & selesaikan',exact:true}).click();
   await page.waitForFunction(()=>officeTasks.list().some(t=>t.status==='done'));
   await page.click('#closeTasks');
-  assert.match(await page.locator('#logStats').innerText(),/1\s*Done today/);
+  assert.match(await page.locator('#logStats').innerText(),/1\s*Selesai hari ini/);
   await page.click('#bTasks');
-  assert.match(await page.locator('#logList').innerText(),/KR started task: Caption for the new menu/);
-  assert.match(await page.locator('#logList').innerText(),/KR finished task: Caption for the new menu/);
+  assert.match(await page.locator('#logList').innerText(),/KR memulai tugas: Caption for the new menu/);
+  assert.match(await page.locator('#logList').innerText(),/KR menyelesaikan tugas: Caption for the new menu/);
   const kn=(await api(4181,'/api/tasks')).body.find(t=>t.assignee==='Kak Rani');
   assert.equal(kn.by,'dry-run');
   assert.equal((await api(4181,`/api/tasks/${kn.id}`,{method:'PATCH',body:JSON.stringify({status:'done',result:'x'})})).status,409,'AI tasks are not finished by hand');
   // Members without an agent keep the manual flow.
   await page.fill('#taskTitle','Plan the quarter');await page.selectOption('#taskAssignee','Koh Arman');await page.click('.task-primary');
-  await page.locator('.task-item',{hasText:'Plan the quarter'}).getByRole('button',{name:'Start task'}).click();
+  await page.locator('.task-item',{hasText:'Plan the quarter'}).getByRole('button',{name:'Mulai tugas'}).click();
   await waitFor(async()=>(await api(4181,'/api/tasks')).body.find(t=>t.title==='Plan the quarter').status==='active');
   await page.locator('.task-item textarea').fill('Unsaved result stays here');
   await page.locator('#taskTitle').focus();
@@ -66,7 +66,7 @@ const waitFor=async(check,ms=20000)=>{const end=Date.now()+ms;while(Date.now()<e
   assert.equal(failed.status,'queued');
   const page=await browser.newPage();await page.goto('http://127.0.0.1:4182');await page.waitForFunction(()=>window.officeScene);
   await page.waitForFunction(()=>document.getElementById('taskNote').textContent.includes('Claude'));
-  await page.click('#bTasks');await page.getByRole('button',{name:'Try again'}).waitFor();
+  await page.click('#bTasks');await page.getByRole('button',{name:'Coba lagi'}).waitFor();
   console.log('PASS: agent error is shown with Try again, task stays queued');
  }finally{two.child.kill();}
  }finally{await browser.close();}

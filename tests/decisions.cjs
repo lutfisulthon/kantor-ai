@@ -18,11 +18,11 @@ const api=(p,opts={})=>fetch(`http://127.0.0.1:${PORT}${p}`,{...opts,headers:{'c
   // An almost empty brief makes the agent ask instead of guessing.
   await page.click('#bTasks');await page.fill('#taskTitle','Caption for the launch');await page.selectOption('#taskAssignee','Kak Rani');await page.click('#taskForm .task-primary');await page.click('#closeTasks');
   await page.locator('#decisions').waitFor({state:'visible',timeout:20000});
-  assert.match(await page.locator('#decisions').innerText(),/1 task needs your decision · KR/);
-  assert.match(await page.locator('#logList').innerText(),/KR needs a decision before continuing/);
+  assert.match(await page.locator('#decisions').innerText(),/1 tugas perlu keputusan Anda · KR/);
+  assert.match(await page.locator('#logList').innerText(),/KR perlu keputusan sebelum melanjutkan/);
   await page.click('#decisions');assert.equal(await page.locator('#taskFilter').inputValue(),'blocked');
-  assert.match(await page.locator('.task-questions').innerText(),/who is this for/);
-  await page.fill('textarea[id^="answer-"]','For our Instagram followers: the new iced coffee menu, launch on Friday.');await page.getByRole('button',{name:'Send answer'}).click();
+  assert.match(await page.locator('.task-questions').innerText(),/untuk siapa ini/);
+  await page.fill('textarea[id^="answer-"]','For our Instagram followers: the new iced coffee menu, launch on Friday.');await page.getByRole('button',{name:'Kirim jawaban'}).click();
   await page.waitForFunction(()=>document.getElementById('decisions').hidden);
   const kn=await (async()=>{for(let i=0;i<40;i++){const t=(await api('/api/tasks')).body.find(t=>t.assignee==='Kak Rani');if(t.status==='review')return t;await new Promise(r=>setTimeout(r,250));}})();
   assert.ok(kn,'answered task is drafted');assert.match(kn.brief,/Answers:\nFor our Instagram/);

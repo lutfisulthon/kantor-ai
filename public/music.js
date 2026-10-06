@@ -37,8 +37,8 @@
       }
       if(enabled){enabled=false;clearInterval(timer);await context.suspend();}
       else{await context.resume();if(context.state!=='running')throw new Error('Audio not allowed yet');enabled=true;nextTime=context.currentTime+.05;schedule();timer=setInterval(schedule,100);}
-      button.textContent=enabled?'Music: on':'Music';button.setAttribute('aria-pressed',String(enabled));button.setAttribute('aria-label',enabled?'Turn off relaxing music':'Play relaxing music');
-    }catch{enabled=false;clearInterval(timer);button.textContent='Try music';button.setAttribute('aria-pressed','false');button.setAttribute('aria-label','Try playing relaxing music');document.getElementById('sceneStatus').textContent='Music could not play. Press Try music to try again.';}
+      button.textContent=enabled?'Musik: nyala':'Musik';button.setAttribute('aria-pressed',String(enabled));button.setAttribute('aria-label',enabled?'Matikan musik santai':'Putar musik santai');
+    }catch{enabled=false;clearInterval(timer);button.textContent='Coba musik';button.setAttribute('aria-pressed','false');button.setAttribute('aria-label','Coba putar musik santai');document.getElementById('sceneStatus').textContent='Musik tidak dapat diputar. Tekan Coba musik untuk mencoba lagi.';}
     finally{button.disabled=false;}
   };
   volume.oninput=()=>{

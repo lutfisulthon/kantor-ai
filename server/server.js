@@ -53,17 +53,17 @@ async function askClaude(agent, task) {
         messages: [{role: 'user', content: `Task: ${task.title}\n\nBrief:\n${task.brief || '(no brief given)'}${task.feedback ? `\n\nPrevious draft:\n${task.result}\n\nRevision requested:\n${task.feedback}` : ''}`}]})
     });
     const body = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(body?.error?.message || `Claude API returned ${response.status}`);
+    if (!response.ok) throw new Error(body?.error?.message || `API Claude mengembalikan ${response.status}`);
     const answer = (body.content || []).filter(part => part.type === 'text').map(part => part.text).join('\n').trim();
-    if (!answer) throw new Error('Claude returned an empty answer');
+    if (!answer) throw new Error('Claude mengembalikan jawaban kosong');
     return answer;
   } finally { clearTimeout(timer); }
 }
 async function dryRun(agent, task) {
   await new Promise(resolve => setTimeout(resolve, Number(process.env.DRY_RUN_DELAY_MS ?? 4000)));
   // Dry runs ask back when the brief is nearly empty, so the "Needs decision" flow can be tried without a key.
-  if ((task.brief || '').trim().length < 12) return 'QUESTIONS:\n1. DRY RUN: who is this for, and what should it say?\n2. DRY RUN: any facts, links or deadlines to include?';
-  return `DRY RUN: no ANTHROPIC_API_KEY is set, so this is placeholder text, not AI output.\n\n${agent.role} would draft: "${task.title}".\nBrief received: ${task.brief || '(none)'}${task.feedback ? `\nRevision requested: ${task.feedback}` : ''}`;
+  if ((task.brief || '').trim().length < 12) return 'QUESTIONS:\n1. UJI COBA: untuk siapa ini, dan apa yang harus disampaikan?\n2. UJI COBA: ada fakta, tautan, atau tenggat yang perlu dimasukkan?';
+  return `UJI COBA: ANTHROPIC_API_KEY belum diisi, jadi ini teks contoh, bukan keluaran AI.\n\n${agent.role} akan menyusun draf: "${task.title}".\nArahan diterima: ${task.brief || '(tidak ada)'}${task.feedback ? `\nRevisi diminta: ${task.feedback}` : ''}`;
 }
 async function work(name) {
   if (busy.has(name)) return;
@@ -86,7 +86,7 @@ async function work(name) {
     }
   } catch (error) {
     const current = tasks.find(t => t.id === task.id);
-    if (current && current.status === 'active' && current.assignee === name && current.runId === runId) { Object.assign(current, {status: 'queued', runId:null, version:(current.version||0)+1, error: error.name === 'AbortError' ? 'Claude took too long to answer.' : error.message === 'fetch failed' ? 'Could not reach the Claude API. Check the internet connection.' : error.message, updatedAt: now()}); save(); }
+    if (current && current.status === 'active' && current.assignee === name && current.runId === runId) { Object.assign(current, {status: 'queued', runId:null, version:(current.version||0)+1, error: error.name === 'AbortError' ? 'Claude terlalu lama menjawab.' : error.message === 'fetch failed' ? 'Tidak dapat menghubungi API Claude. Periksa koneksi internet.' : error.message, updatedAt: now()}); save(); }
     console.error(`Agent ${name} failed on "${task.title}": ${error.message}`);
   } finally { busy.delete(name); setImmediate(() => work(name)); }
 }
@@ -100,7 +100,7 @@ function send(res, status, body) {
 function readJson(req) {
   return new Promise((resolve, reject) => {
     let size = 0; const chunks = [];
-    req.on('data', chunk => { size += chunk.length; if (size > 1e6) { reject(Object.assign(new Error('Request too large'), {status: 413})); req.destroy(); } else chunks.push(chunk); });
+    req.on('data', chunk => { size += chunk.length; if (size > 1e6) { reject(Object.assign(new Error('Permintaan terlalu besar'), {status: 413})); req.destroy(); } else chunks.push(chunk); });
     req.on('end', () => { try { resolve(JSON.parse(Buffer.concat(chunks).toString() || '{}')); } catch { reject(Object.assign(new Error('Invalid JSON'), {status: 400})); } });
   });
 }
@@ -114,24 +114,24 @@ function newTask(input) {
 async function api(req, res, url) {
   if (url.pathname === '/api/reviews' && req.method === 'POST') {
     const input=await readJson(req),names=input?.members;
-    if(!Array.isArray(names)||!names.length||names.length>6||new Set(names).size!==names.length||names.some(n=>!MEMBERS.has(n)))return send(res,400,{error:'Choose 1–6 different team members.'});
-    const task=tasks.find(t=>t.id===input.taskId);if(!task?.result)return send(res,404,{error:'This task has no draft to discuss.'});
-    if(input.version!==(task.version||0))return send(res,409,{error:'The draft changed. Refresh and choose the latest version.'});
-    const connected=names.filter(n=>agents[n]);if(!connected.length)return send(res,400,{error:'Invite at least one connected AI agent for feedback.'});
+    if(!Array.isArray(names)||!names.length||names.length>6||new Set(names).size!==names.length||names.some(n=>!MEMBERS.has(n)))return send(res,400,{error:'Pilih 1–6 anggota tim yang berbeda.'});
+    const task=tasks.find(t=>t.id===input.taskId);if(!task?.result)return send(res,404,{error:'Tugas ini belum punya draf untuk dibahas.'});
+    if(input.version!==(task.version||0))return send(res,409,{error:'Draf berubah. Muat ulang dan pilih versi terbaru.'});
+    const connected=names.filter(n=>agents[n]);if(!connected.length)return send(res,400,{error:'Undang setidaknya satu agen AI yang tersambung untuk masukan.'});
     const source=structuredClone(task),notes=[];
     for(const name of connected){const review={title:`Review meeting: ${source.title}`,brief:`Review this existing draft from your role. Give concrete suggestions, missing facts and next steps. Do not approve it, publish it or claim to change the task.\n\nOriginal brief:\n${source.brief}\n\nDraft to review:\n${source.result}\n\nFocus:\n${text(input.focus,2000)||'Clarity, accuracy and completeness.'}${notes.length?`\n\nColleague feedback:\n${notes.map(n=>`${n.name}: ${n.result}`).join('\n\n')}`:''}`};const result=DRY_RUN?await dryRun(agents[name],review):await askClaude(reviewer(agents[name]),review);notes.push({name,result:result.slice(0,10000)});}
     return send(res,200,{mode:DRY_RUN?'dry-run':'claude',taskId:source.id,sourceVersion:source.version||0,createdAt:now(),stale:(tasks.find(t=>t.id===source.id)?.version||0)!==(source.version||0),notes});
   }
   if (url.pathname === '/api/tasks/batch' && req.method === 'POST') {
     const input=await readJson(req),list=input?.tasks;
-    if(!Array.isArray(list)||!list.length||list.length>13)return send(res,400,{error:'Choose 1–13 tasks.'});
+    if(!Array.isArray(list)||!list.length||list.length>13)return send(res,400,{error:'Pilih 1–13 tugas.'});
     const added=list.map(item=>newTask({...item,status:'queued',result:''}));
-    if(added.some(t=>!t||!MEMBERS.has(t.assignee)))return send(res,400,{error:'Every task needs a title and a known assignee.'});
+    if(added.some(t=>!t||!MEMBERS.has(t.assignee)))return send(res,400,{error:'Setiap tugas perlu judul dan penanggung jawab yang dikenal.'});
     tasks.unshift(...added);save();send(res,201,added);setImmediate(kick);return;
   }
   if (url.pathname === '/api/coffee' && req.method === 'POST') {
     const input=await readJson(req),names=input?.members,topic=text(input?.topic,3000);
-    if(!Array.isArray(names)||names.length!==2||names[0]===names[1]||names.some(n=>!agents[n])||!topic)return send(res,400,{error:'Choose two connected AI agents and enter a topic.'});
+    if(!Array.isArray(names)||names.length!==2||names[0]===names[1]||names.some(n=>!agents[n])||!topic)return send(res,400,{error:'Pilih dua agen AI yang tersambung dan masukkan topik.'});
     const notes=[];
     for(const name of names){
       const task={title:'Coffee break: peer feedback',brief:`Review this topic or draft from your role. Give concrete suggestions, unresolved questions and next steps. Do not claim to take any external action.\n\n${topic}${notes.length?`\n\nFirst colleague feedback:\n${notes[0].result}`:''}`};
@@ -145,18 +145,18 @@ async function api(req, res, url) {
   if (url.pathname === '/api/tasks' && req.method === 'GET') return send(res, 200, tasks);
   if (url.pathname === '/api/tasks' && req.method === 'POST') {
     const input=await readJson(req);
-    if(input?.status!==undefined&&!STATES.has(input.status))return send(res,400,{error:'Unknown status.'});
-    const task = newTask(input); if (!task) return send(res, 400, {error: 'A task needs a title and an assignee.'});
-    if(!MEMBERS.has(task.assignee))return send(res,400,{error:'Unknown assignee.'});
-    if(task.status==='review'||task.status==='blocked'||(agents[task.assignee]&&task.status!=='queued'))return send(res,409,{error:'AI drafts must be generated before review.'});
-    if(task.status==='active'&&tasks.some(t=>t.assignee===task.assignee&&t.status==='active'))return send(res,409,{error:'This member already has an active task.'});
+    if(input?.status!==undefined&&!STATES.has(input.status))return send(res,400,{error:'Status tidak dikenal.'});
+    const task = newTask(input); if (!task) return send(res, 400, {error: 'Tugas perlu judul dan penanggung jawab.'});
+    if(!MEMBERS.has(task.assignee))return send(res,400,{error:'Penanggung jawab tidak dikenal.'});
+    if(task.status==='review'||task.status==='blocked'||(agents[task.assignee]&&task.status!=='queued'))return send(res,409,{error:'Draf AI harus dibuat sebelum ditinjau.'});
+    if(task.status==='active'&&tasks.some(t=>t.assignee===task.assignee&&t.status==='active'))return send(res,409,{error:'Anggota ini sudah punya tugas aktif.'});
     tasks.unshift(task); save(); send(res, 201, task); setImmediate(kick); return;
   }
   // One-time move of tasks saved in a browser before the server existed; only into an empty store.
   if (url.pathname === '/api/tasks/import' && req.method === 'POST') {
-    if (tasks.length) return send(res, 409, {error: 'The server already has tasks.'});
-    const list = await readJson(req); if (!Array.isArray(list)) return send(res, 400, {error: 'Expected a list of tasks.'});
-    if(tasks.length)return send(res,409,{error:'The server already has tasks.'});
+    if (tasks.length) return send(res, 409, {error: 'Server sudah memiliki tugas.'});
+    const list = await readJson(req); if (!Array.isArray(list)) return send(res, 400, {error: 'Diharapkan daftar tugas.'});
+    if(tasks.length)return send(res,409,{error:'Server sudah memiliki tugas.'});
     tasks = list.map(item => { const task = newTask(item); if (task && typeof item.createdAt === 'string') task.createdAt = item.createdAt; if(task&&Array.isArray(item.history))task.history=item.history; return task; }).filter(Boolean);
     // Imported work that was in progress by hand goes back to the queue.
     tasks.forEach(task => { if (task.status === 'active') task.status = 'queued'; });
@@ -164,38 +164,38 @@ async function api(req, res, url) {
   }
   const match = url.pathname.match(/^\/api\/tasks\/([0-9a-f-]{36})$/);
   if (match && req.method === 'PATCH') {
-    const task = tasks.find(t => t.id === match[1]); if (!task) return send(res, 404, {error: 'Task not found.'});
+    const task = tasks.find(t => t.id === match[1]); if (!task) return send(res, 404, {error: 'Tugas tidak ditemukan.'});
     const input = await readJson(req), change = {};
-    if(!input||typeof input!=='object')return send(res,400,{error:'Expected an object.'});
+    if(!input||typeof input!=='object')return send(res,400,{error:'Diharapkan sebuah objek.'});
     // Answering an agent's questions adds the answers to the brief and puts the task back in its queue.
     if(input.action==='answer'){
-      if(task.status!=='blocked'||input.version!==(task.version||0))return send(res,409,{error:'These questions changed. Refresh and answer the latest ones.'});
-      const answer=text(input.answer,3000);if(!answer)return send(res,400,{error:'Write an answer first.'});
+      if(task.status!=='blocked'||input.version!==(task.version||0))return send(res,409,{error:'Pertanyaan ini berubah. Muat ulang dan jawab yang terbaru.'});
+      const answer=text(input.answer,3000);if(!answer)return send(res,400,{error:'Tulis jawaban terlebih dahulu.'});
       Object.assign(task,{status:'queued',brief:`${task.brief}\n\nQuestions from ${task.assignee}:\n${task.questions}\n\nAnswers:\n${answer}`.trim().slice(0,5000),questions:undefined,askedBy:undefined,error:undefined,runId:null,version:(task.version||0)+1,updatedAt:now()});
       save();send(res,200,task);setImmediate(kick);return;
     }
     if(input.action!==undefined){
-      if(!['approve','revise'].includes(input.action))return send(res,400,{error:'Unknown action.'});
-      if(task.status!=='review'||input.version!==(task.version||0))return send(res,409,{error:'This draft changed. Refresh and review the latest version.'});
-      if(input.action==='revise'&&!text(input.feedback,5000))return send(res,400,{error:'Describe the changes needed.'});
+      if(!['approve','revise'].includes(input.action))return send(res,400,{error:'Aksi tidak dikenal.'});
+      if(task.status!=='review'||input.version!==(task.version||0))return send(res,409,{error:'Draf ini berubah. Muat ulang dan tinjau versi terbaru.'});
+      if(input.action==='revise'&&!text(input.feedback,5000))return send(res,400,{error:'Jelaskan perubahan yang diperlukan.'});
       Object.assign(task,{status:input.action==='approve'?'done':'queued',feedback:input.action==='revise'?text(input.feedback,5000):'',reviewedAt:input.action==='approve'?now():null,runId:null,error:undefined,version:(task.version||0)+1,updatedAt:now()});
       save();send(res,200,task);setImmediate(kick);return;
     }
-    if (input.assignee !== undefined) { change.assignee = text(input.assignee, 80); if (!MEMBERS.has(change.assignee)) return send(res, 400, {error: 'Pick an assignee.'}); if (task.status !== 'done') change.status = 'queued'; }
+    if (input.assignee !== undefined) { change.assignee = text(input.assignee, 80); if (!MEMBERS.has(change.assignee)) return send(res, 400, {error: 'Pilih penanggung jawab.'}); if (task.status !== 'done') change.status = 'queued'; }
     if (input.status !== undefined) {
-      if (!STATES.has(input.status)||input.status==='review'||input.status==='blocked') return send(res, 400, {error: 'Unknown status.'});
+      if (!STATES.has(input.status)||input.status==='review'||input.status==='blocked') return send(res, 400, {error: 'Status tidak dikenal.'});
       const assignee = change.assignee || task.assignee;
-      if(task.status==='review'&&!change.assignee)return send(res,409,{error:'Approve this draft or request a revision.'});
-      if (agents[assignee] && input.status !== 'queued') return send(res, 409, {error: 'This member is connected to an AI agent; it starts and finishes its own tasks.'});
-      if (input.status === 'active' && tasks.some(t => t.id !== task.id && t.assignee === assignee && t.status === 'active')) return send(res, 409, {error: 'This member already has an active task.'});
-      if (input.status === 'done' && !text(input.result, 10000)) return send(res, 400, {error: 'Write a result before finishing.'});
+      if(task.status==='review'&&!change.assignee)return send(res,409,{error:'Setujui draf ini atau minta revisi.'});
+      if (agents[assignee] && input.status !== 'queued') return send(res, 409, {error: 'Anggota ini tersambung ke agen AI; ia memulai dan menyelesaikan tugasnya sendiri.'});
+      if (input.status === 'active' && tasks.some(t => t.id !== task.id && t.assignee === assignee && t.status === 'active')) return send(res, 409, {error: 'Anggota ini sudah punya tugas aktif.'});
+      if (input.status === 'done' && !text(input.result, 10000)) return send(res, 400, {error: 'Tulis hasil sebelum menyelesaikan.'});
       change.status = input.status; change.result = input.status === 'done' ? text(input.result, 10000) : '';
     }
-    if(!Object.keys(change).length)return send(res,400,{error:'Provide an assignee, status, or review action.'});
+    if(!Object.keys(change).length)return send(res,400,{error:'Berikan penanggung jawab, status, atau aksi tinjauan.'});
     // Moving a task back to the queue clears a previous agent error so it is tried again.
     Object.assign(task, change, {runId:null,version:(task.version||0)+1,error: undefined, updatedAt: now()}); save(); kick(); return send(res, 200, task);
   }
-  send(res, 404, {error: 'Not found.'});
+  send(res, 404, {error: 'Tidak ditemukan.'});
 }
 const TYPES = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json', '.ico': 'image/x-icon'};
 function serveFile(res, url) {

@@ -2,10 +2,10 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const status = message => { $('sceneStatus').textContent = message; };
-  if (!window.THREE) { status('The 3D office failed to load. Check your internet connection, then reload.'); return; }
+  if (!window.THREE) { status('Kantor 3D gagal dimuat. Periksa koneksi internet, lalu muat ulang.'); return; }
   let renderer;
   try { renderer = new THREE.WebGLRenderer({canvas: $('c'), antialias: true}); }
-  catch { status('This browser cannot display WebGL yet. Try a browser with graphics acceleration.'); return; }
+  catch { status('Browser ini belum dapat menampilkan WebGL. Coba browser dengan akselerasi grafis.'); return; }
   // Initials and floor signage are drawn into canvases, so the web fonts must be ready first.
   await Promise.race([
     Promise.all(['700 20px "IBM Plex Mono"', '600 60px Archivo'].map(font => document.fonts.load(font))).catch(() => {}),
@@ -31,16 +31,16 @@
   Object.assign(sun.shadow.camera, {left:-45, right:45, top:55, bottom:-40, near:1, far:130});
   sun.shadow.bias = -.001; scene.add(sun);
   const FLOOR = {
-    1: {name:'Barber & parking', title:'Where every day starts.', description:'A barber on one side, parking on the other.'},
-    2: {name:'Kitchen & dining', title:'Meet at the table.', description:'A shared kitchen and long tables where the whole team eats together.'},
-    3: {name:'Workspace', title:'Room for everyone.', description:'An open floor with four desk groups, a glass meeting room, phone booths, a pantry, two lounges and a prayer room.'},
-    4: {name:'Rooftop', title:'Take a break upstairs.', description:'A garden terrace with a pergola lounge, ping pong, bean bags, a swing, chess, yoga mats, billiards and a coffee bar.'},
+    1: {name:'Barber & parkir', title:'Tempat setiap hari dimulai.', description:'Barber di satu sisi, parkiran di sisi lain.'},
+    2: {name:'Dapur & ruang makan', title:'Bertemu di meja makan.', description:'Dapur bersama dan meja panjang tempat seluruh tim makan bersama.'},
+    3: {name:'Ruang kerja', title:'Ruang untuk semua.', description:'Lantai terbuka dengan empat kelompok meja, ruang rapat kaca, phone booth, pantry, dua lounge, dan musholla.'},
+    4: {name:'Rooftop', title:'Rehat sejenak di atas.', description:'Teras taman dengan lounge pergola, ping pong, bean bag, ayunan, catur, matras yoga, biliar, dan coffee bar.'},
   };
   const GROUPS = {
-    leadership: {name:'Leadership', x:-5.5, z:-3.5, color:0x0a2a5c},
-    marketing: {name:'Marketing & Business', x:5.5, z:-3.5, color:0xb8322a},
-    engineering: {name:'Engineering & Design', x:-5.5, z:6.5, color:0x1f6fc0},
-    service: {name:'Customer Service', x:5.5, z:6.5, color:0x0e7490}
+    leadership: {name:'Pimpinan', x:-5.5, z:-3.5, color:0x0a2a5c},
+    marketing: {name:'Pemasaran & Bisnis', x:5.5, z:-3.5, color:0xb8322a},
+    engineering: {name:'Teknik & Desain', x:-5.5, z:6.5, color:0x1f6fc0},
+    service: {name:'Layanan Pelanggan', x:5.5, z:6.5, color:0x0e7490}
   };
   const TEAM = [
     {n:'Koh Arman', initials:'KA', gender:'male', role:'CEO', group:'leadership'},
@@ -129,7 +129,7 @@
     for(const offset of (dual?[-.38,.38]:[0])){
       box(.07,.17,.07,DARK,x+offset,.97,z);box(dual?.7:1.1,.66,.07,DARK,x+offset,1.14,z);
       box(dual?.61:1,.54,.015,SCREEN,x+offset,1.2,z-f*.045);
-      if(member){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;const texture=new THREE.CanvasTexture(canvas);texture.encoding=THREE.sRGBEncoding;const face=new THREE.Mesh(new THREE.PlaneGeometry(dual?.61:1,.54),new THREE.MeshBasicMaterial({map:texture}));face.position.set(x+offset,1.47,z-f*.056);face.rotation.y=f>0?Math.PI:0;face.userData.monitor=member;root.add(face);monitorDisplays.push({member,canvas,texture,face,status:'Idle',taskId:null});}
+      if(member){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;const texture=new THREE.CanvasTexture(canvas);texture.encoding=THREE.sRGBEncoding;const face=new THREE.Mesh(new THREE.PlaneGeometry(dual?.61:1,.54),new THREE.MeshBasicMaterial({map:texture}));face.position.set(x+offset,1.47,z-f*.056);face.rotation.y=f>0?Math.PI:0;face.userData.monitor=member;root.add(face);monitorDisplays.push({member,canvas,texture,face,status:'Senggang',taskId:null});}
     }
     box(.65,.03,.23,0x8a8479,x,.97,z-f*.46);
     cylinder(.09,.08,.16,CARD,x+.7,.97,z-f*.42);
@@ -309,7 +309,7 @@
   box(2.2,1.4,.06,CARD,0,.9,0,board);for(const s of [-1,1])box(.06,2.3,.06,DARK,s*1.05,0,0,board);
   for(let i=0;i<5;i++)box(.34,.3,.02,[0xf0d27a,0xe8b8a0,0xc9d9c6][i%3],-.7+(i%3)*.6,1.6-(i>>1)*.5-(i%2)*.1,.05,board);
   plant(-12.2,-8.4);plant(15,-1.2,.8);restroom(-14.4,-10.55,2.9,2.6,'+z');plant(-14.3,10.4,.9);plant(15,10.5,.8);plant(7.2,10.6,.7);
-  textPlane('SHARED KITCHEN',-3,-1.9,7);textPlane('COFFEE BAR',11.8,-.9,5);textPlane('DINING',-1,9.5,7);
+  textPlane('DAPUR BERSAMA',-3,-1.9,7);textPlane('COFFEE BAR',11.8,-.9,5);textPlane('DINING',-1,9.5,7);
 
   // Floor 3: one open room, layered by rugs, a board partition, a low shelf, glass rooms and hanging lamps.
   shell(3);
@@ -359,7 +359,7 @@
   box(6.2,.08,.1,DARK,-12.9,2.4,-6.5);box(.1,.08,5.5,DARK,-9.8,2.4,-9.25);
   table(-13.2,-9,2.8,1.4);
   box(2.2,1.1,.08,DARK,-13.2,1.1,-11.82);box(2,.95,.02,SCREEN,-13.2,1.17,-11.77);
-  textPlane('MEETING ROOM',-12.9,-5.8,4.6);
+  textPlane('RUANG RAPAT',-12.9,-5.8,4.6);
   // Doors swing open on their own when someone comes within reach, then close again.
   const doors=[];
   function door(hx,hz,width,base,color){
@@ -373,7 +373,7 @@
   const hangouts=[];
   for(const x of [-14.2,-13.2,-12.2])for(const [z,f] of [[-10.35,1],[-7.65,-1]]){
     chair(x,z,f,0x8a7a66);
-    hangouts.push({x,z,f,floor:3,route:[[-11.2,P3],[-11.2,z]],state:'meet',label:'Heading to the meeting room',occupant:null});
+    hangouts.push({x,z,f,floor:3,route:[[-11.2,P3],[-11.2,z]],state:'meet',label:'Menuju ruang rapat',occupant:null});
   }
   // Two phone booths, front left.
   for(const x of [-14.6,-12.4]){
@@ -384,9 +384,9 @@
     box(.08,.08,1.95,DARK,x-.95,2.3,10.5);box(.08,.08,1.95,DARK,x+.95,2.3,10.5);
     box(1.6,1.1,.04,0x86968a,x,.9,11.38);box(.9,.05,.35,BALSA,x,.95,11.2);
     cylinder(.24,.24,.48,DARK,x,0,10.7);
-    hangouts.push({x,z:10.6,f:-1,floor:3,route:[[-11,P3],[-11,8.8],[x,8.8]],state:'call',label:'Heading to a phone booth',occupant:null});
+    hangouts.push({x,z:10.6,f:-1,floor:3,route:[[-11,P3],[-11,8.8],[x,8.8]],state:'call',label:'Menuju phone booth',occupant:null});
   }
-  textPlane('PHONE BOOTH',-13.5,8.9,4.4);
+  textPlane('BILIK TELEPON',-13.5,8.9,4.4);
   // Pantry and lounge, back right.
   box(4.6,.9,.8,0xcdb28a,11.8,0,-11.2);box(4.7,.06,.9,CARD,11.8,.9,-11.2);
   box(.45,.55,.45,CARD,10.4,.96,-11.25);cylinder(.2,.2,.45,0xc4dadb,10.4,1.51,-11.25);
@@ -401,12 +401,12 @@
   sofa(15,-7.5,3.4,-Math.PI/2);box(.8,.4,1,BALSA,13.1,0,-7.5);
   cylinder(.2,.25,.05,DARK,15.3,0,-4.9);box(.04,1.6,.04,DARK,15.3,.05,-4.9);cylinder(.12,.3,.3,CARD,15.3,1.6,-4.9);
   textPlane('LOUNGE',13.6,-5.3,3.6);
-  for(const x of [10.6,12.6])hangouts.push({x,z:-10.2,f:-1,floor:3,route:[[10,P3],[10,-10.2]],state:'drink',label:'Heading to the pantry',occupant:null});
-  hangouts.push({x:8.7,z:-10.3,f:-1,angle:Math.PI,floor:3,route:[[9,P3],[9,-10.3]],state:'water',label:'Watering the plant',occupant:null});
-  for(const z of [-8.3,-6.7])hangouts.push({x:14.75,z,f:-1,angle:-Math.PI/2,floor:3,route:[[10,P3],[10,z]],state:'lounge',label:'Heading to the lounge',occupant:null});
+  for(const x of [10.6,12.6])hangouts.push({x,z:-10.2,f:-1,floor:3,route:[[10,P3],[10,-10.2]],state:'drink',label:'Menuju pantry',occupant:null});
+  hangouts.push({x:8.7,z:-10.3,f:-1,angle:Math.PI,floor:3,route:[[9,P3],[9,-10.3]],state:'water',label:'Menyiram tanaman',occupant:null});
+  for(const z of [-8.3,-6.7])hangouts.push({x:14.75,z,f:-1,angle:-Math.PI/2,floor:3,route:[[10,P3],[10,z]],state:'lounge',label:'Menuju lounge',occupant:null});
   // One reader in front of the task board, one behind it (reached around the board's right edge).
-  hangouts.push({x:0,z:-2.5,f:-1,angle:Math.PI,floor:3,route:[[0,P3]],state:'look',label:'Heading to the task board',occupant:null});
-  hangouts.push({x:0,z:-4.5,f:1,angle:0,floor:3,route:[[1.95,P3],[1.95,-4.5]],state:'look',label:'Heading to the task board',occupant:null});
+  hangouts.push({x:0,z:-2.5,f:-1,angle:Math.PI,floor:3,route:[[0,P3]],state:'look',label:'Menuju papan tugas',occupant:null});
+  hangouts.push({x:0,z:-4.5,f:1,angle:0,floor:3,route:[[1.95,P3],[1.95,-4.5]],state:'look',label:'Menuju papan tugas',occupant:null});
   // Musholla, front right: low partitions, a door on the aisle side, two rows of prayer mats.
   box(5.3,.02,3.3,0xdfe3d6,13.3,.02,10.15);
   box(.12,1.1,1.1,CARD,10.6,0,9.05);box(.12,1.1,1.1,CARD,10.6,0,11.2);box(5.5,1.1,.12,CARD,13.3,0,8.5);
@@ -415,9 +415,9 @@
   const prayerSpots=[];
   for(const z of [9.25,11.05])for(const [i,x] of [11.5,12.7,13.9,15.1].entries()){
     box(.7,.03,1.1,i%2?0xa98158:0x86968a,x,.03,z);
-    prayerSpots.push({x,z,f:-1,floor:3,route:[[10,P3],[10,10.1],[x,10.1]],state:'pray',label:'Heading to the prayer room',occupant:null});
+    prayerSpots.push({x,z,f:-1,floor:3,route:[[10,P3],[10,10.1],[x,10.1]],state:'pray',label:'Menuju musholla',occupant:null});
   }
-  textPlane('PRAYER ROOM',13.3,7.9,3.6);
+  textPlane('MUSHOLLA',13.3,7.9,3.6);
   plant(15,-11,.9);plant(-12.6,-3,.8);restroom(-14.45,-5.05,2.9,2.5,'+x');
   // Back lounge between the meeting room and the pantry: sofa on a round rug, two armchairs, books and a quote panel.
   cylinder(3.1,3.1,.03,0xe8cfc0,-2.6,.02,-9.6);
@@ -463,15 +463,15 @@
     for(const dx of [-1.1,0,1.1])plant(x+dx,11.35,.42,.55);
   }
   // Two lounge seats on the sofa, reached along the back of the Leadership rug.
-  for(const x of [-4.4,-2.4])hangouts.push({x,z:-10.7,f:1,floor:3,route:[[-9.3,P3],[-9.3,-8],[x,-8]],state:'lounge',label:'Heading to the back lounge',occupant:null});
+  for(const x of [-4.4,-2.4])hangouts.push({x,z:-10.7,f:1,floor:3,route:[[-9.3,P3],[-9.3,-8],[x,-8]],state:'lounge',label:'Menuju lounge belakang',occupant:null});
   textPlane('LOUNGE',-2.6,-7.3,3.2);
 
   shell(4);
   // Rooftop garden: a pergola lounge, and a play deck instead of one long table, so a break is something to do.
   for(let row=0;row<24;row++)box(31.8,.025,.98,[0xd9bd98,0xe0c7a5,0xd4b590][row%3],0,.031,-11.5+row);
   const roofSpots=[];
-  const ROOF_STATUS={'relaxes in the pergola lounge':'relaxing in the pergola lounge','plays ping pong':'playing ping pong','hangs out on the bean bags':'hanging out on the bean bags',
-    'sits on the swing':'sitting on the swing','plays chess':'playing chess','stretches on a yoga mat':'stretching on a yoga mat','plays billiards':'playing billiards','grabs a coffee at the rooftop bar':'having coffee at the rooftop bar'};
+  const ROOF_STATUS={'bersantai di lounge pergola':'sedang bersantai di lounge pergola','bermain ping pong':'sedang bermain ping pong','bersantai di bean bag':'sedang bersantai di bean bag',
+    'duduk di ayunan':'sedang duduk di ayunan','bermain catur':'sedang bermain catur','meregangkan badan di matras yoga':'sedang meregangkan badan di matras yoga','bermain biliar':'sedang bermain biliar','mengambil kopi di bar rooftop':'sedang ngopi di bar rooftop'};
   // Every rooftop spot keeps the 'break' state; roofPose picks the pose and fun names the activity.
   const roofSpot=(x,z,angle,fun,extra={})=>{const spot={x,z,f:1,angle,floor:4,route:[[x,0]],state:'break',fun,...extra};roofSpots.push(spot);return spot;};
   box(10,.03,8.7,0xd7c5a7,-6,.06,-6.5);
@@ -480,8 +480,8 @@
   sofa(-6.5,-9,5.5);sofa(-10,-5.7,3.7,Math.PI/2);
   cylinder(1,1,.1,BALSA,-6.5,.55,-6.2);cylinder(.14,.3,.55,DARK,-6.5,0,-6.2);plant(-6.5,-6.2,.3,.65);
   cylinder(.5,.5,.5,0x8b9d7d,-4,0,-6);
-  for(const x of [-8,-6])roofSpot(x,-8.8,0,'relaxes in the pergola lounge');
-  for(const z of [-6.4,-4.8])roofSpot(-9.8,z,Math.PI/2,'relaxes in the pergola lounge');
+  for(const x of [-8,-6])roofSpot(x,-8.8,0,'bersantai di lounge pergola');
+  for(const z of [-6.4,-4.8])roofSpot(-9.8,z,Math.PI/2,'bersantai di lounge pergola');
   const roofGlow=new THREE.MeshStandardMaterial({color:0xffe8b2,emissive:0xffcf83,emissiveIntensity:.8});
   function lantern(x,z){
     box(.42,.06,.42,DARK,x,0,z);box(.42,.06,.42,DARK,x,.65,z);
@@ -501,7 +501,7 @@
   }
   for(const [x,z] of [[-12,10],[11,10],[-12,-10],[12,-10]])lantern(x,z);
   plant(1,-10.5,1.3);plant(13,-10.5,1.25);restroom(14.55,10.6,2.6,2.5,'-x');
-  textPlane('ROOFTOP GARDEN',3,9,8);
+  textPlane('TAMAN ROOFTOP',3,9,8);
   // Rooftop door from the stair core: a white frame with two glass leaves, always open and folded back inside.
   const DOOR_FRAME=0xf6f4ef;
   box(.22,.85,.8,CARD,-16,0,5.9);
@@ -517,8 +517,8 @@
   box(2.74,.05,1.52,0x2f6f8f,6,.7,-5.5);
   for(const z of [-6.24,-4.76])box(2.74,.006,.03,CARD,6,.75,z);box(2.74,.006,.02,CARD,6,.75,-5.5);
   box(.03,.15,1.64,0xf3efe6,6,.75,-5.5);mesh(new THREE.SphereGeometry(.035,10,8),0xf0a531,6.7,1.05,-5.3,root,false);
-  roofSpot(4.1,-5.5,Math.PI/2,'plays ping pong',{standing:true,roofPose:'pingpong'});
-  roofSpot(7.9,-5.5,-Math.PI/2,'plays ping pong',{standing:true,roofPose:'pingpong'});
+  roofSpot(4.1,-5.5,Math.PI/2,'bermain ping pong',{standing:true,roofPose:'pingpong'});
+  roofSpot(7.9,-5.5,-Math.PI/2,'bermain ping pong',{standing:true,roofPose:'pingpong'});
   textPlane('PING PONG',6,-3.6,3);
   // Bean bags on a round lawn under a striped parasol.
   cylinder(2.3,2.3,.03,0x9fc17a,4.5,.05,3.2);
@@ -529,14 +529,14 @@
   [[0xe8866c,0],[0xe0b04f,Math.PI/2],[0x5f9a94,Math.PI],[0xa594c6,-Math.PI/2]].forEach(([color,a])=>{
     const x=4.5+Math.sin(a)*1.35,z=3.2+Math.cos(a)*1.35;
     oval(1.05,.55,1.05,color,x,.28,z);oval(.9,.7,.4,color,x+Math.sin(a)*.38,.55,z+Math.cos(a)*.38);
-    roofSpot(x,z,a+Math.PI,'hangs out on the bean bags',{roofPose:'beanbag'});
+    roofSpot(x,z,a+Math.PI,'bersantai di bean bag',{roofPose:'beanbag'});
   });
   // Swing bench for two, facing the front of the roof.
   for(const x of [9.5,12.1])for(const z of [4.55,5.45])box(.1,2.35,.1,BALSA,x,0,z);
   box(2.75,.12,.12,BALSA,10.8,2.3,5);box(2.75,.12,1,BALSA,10.8,2.35,5);
   for(const x of [9.95,11.65])box(.025,1.72,.025,DARK,x,.6,5.05);
   box(1.9,.08,.6,0xe8866c,10.8,.48,5.05);box(1.9,.55,.07,0xe8866c,10.8,.56,4.78);
-  for(const x of [10.35,11.25])roofSpot(x,5.12,0,'sits on the swing');
+  for(const x of [10.35,11.25])roofSpot(x,5.12,0,'duduk di ayunan');
   // Chess table with two low stools.
   cylinder(.45,.45,.05,BALSA,11.2,.68,-1.3);cylinder(.06,.14,.68,DARK,11.2,0,-1.3);
   {
@@ -547,11 +547,11 @@
     for(let i=0;i<6;i++)cylinder(.025,.03,.07+(i%3)*.02,i<3?0xfbf6ee:DARK,11.05+(i%3)*.1,.735,i<3?-1.48:-1.12);
   }
   stool(10.3,-1.3,.45);stool(12.1,-1.3,.45);
-  roofSpot(10.3,-1.3,Math.PI/2,'plays chess');roofSpot(12.1,-1.3,-Math.PI/2,'plays chess');
+  roofSpot(10.3,-1.3,Math.PI/2,'bermain catur');roofSpot(12.1,-1.3,-Math.PI/2,'bermain catur');
   // Two yoga mats by the back planter.
   for(const [x,color] of [[10.1,0x7fa98a],[11.7,0xd98f7a]]){
     box(.7,.02,1.8,color,x,.06,-8.3);
-    roofSpot(x,-8.1,0,'stretches on a yoga mat',{standing:true,roofPose:'stretch'});
+    roofSpot(x,-8.1,0,'meregangkan badan di matras yoga',{standing:true,roofPose:'stretch'});
   }
   // Flower bed in the middle of the deck.
   box(2.6,.4,.9,0xe7dfce,1.6,0,-1.2);
@@ -564,8 +564,8 @@
     .forEach(([color,x,z])=>mesh(new THREE.SphereGeometry(.05,12,8),color,x,.93,z,root,false));
   const spareCue=mesh(new THREE.CylinderGeometry(.012,.02,1.45,8),BALSA,-6,.9,5.25,root,false);spareCue.rotation.z=Math.PI/2;
   textPlane('BILLIARDS',-6,8.1,3);
-  roofSpot(-8,6.3,Math.PI/2,'plays billiards',{standing:true,roofPose:'billiard'});
-  roofSpot(-4,5.7,-Math.PI/2,'plays billiards',{standing:true,roofPose:'billiard'});
+  roofSpot(-8,6.3,Math.PI/2,'bermain biliar',{standing:true,roofPose:'billiard'});
+  roofSpot(-4,5.7,-Math.PI/2,'bermain biliar',{standing:true,roofPose:'billiard'});
   // Coffee bar along the right parapet.
   box(.8,1,4,0x8a6a4a,15.2,0,-1);box(.9,.06,4.1,CARD,15.2,1,-1);
   box(.5,.6,.45,DARK,15.25,1.06,-2.2);box(.3,.08,.25,0x8a8479,15.1,1.06,-2.2);
@@ -576,7 +576,7 @@
   for(let i=0;i<13;i++)box(.06,.85,.035,0xc9a577,14.78,.08,-2.8+i*.3);
   for(const y of [1.8,2.3])box(.65,.07,4.2,BALSA,15.5,y,-1);
   for(const z of [-2.5,-1.5,-.5,.5]){plant(15.5,z,.22,2.37);cylinder(.08,.07,.17,CARD,15.45,1.87,z);}
-  roofSpot(14.1,-1,Math.PI/2,'grabs a coffee at the rooftop bar',{standing:true,roofPose:'coffee'});
+  roofSpot(14.1,-1,Math.PI/2,'mengambil kopi di bar rooftop',{standing:true,roofPose:'coffee'});
 
   function flight(x,z1,z2,y1,y2,parent) {
     const steps=16,run=(z2-z1)/steps,rise=(y2-y1)/steps;
@@ -660,7 +660,7 @@
     const styles={morning:[0xe9eef5,0xffeed5,.8,.85],afternoon:[0xe6ebf2,0xfff4dd,.85,1],evening:[0xe0c6ae,0xffc185,.6,.55],night:[0x28374a,0xaec6ed,.48,.24]};
     const [sky,tint,fill,direct]=styles[mood];scene.background.set(sky);if(scene.fog)scene.fog.color.set(sky);ambient.intensity=fill;sun.color.set(tint);sun.intensity=direct;
     for(const {lighting} of eveningLights)lighting.visible=activeFloor===0||mood==='night'||mood==='evening';
-    $('moodDescription').textContent=`${mood[0].toUpperCase()+mood.slice(1)} lighting${window.officeStudio.settings.weather==='sunset'?' · Sunset atmosphere':choice==='auto'?' · Your device’s local time':''}.`;
+    $('moodDescription').textContent=`Pencahayaan ${{morning:'pagi',afternoon:'siang',evening:'sore',night:'malam'}[mood]}${window.officeStudio.settings.weather==='sunset'?' · Suasana senja':choice==='auto'?' · Mengikuti waktu perangkat Anda':''}.`;
     currentMood=mood;
   }
   // Parts that fade during camera transitions get their own material copies, so floors keep full opacity.
@@ -907,10 +907,10 @@
     const handle=mesh(new THREE.TorusGeometry(.12,.025,6,12),ACCENT,0,.12,-.04,rig.wateringCan,false);handle.rotation.y=Math.PI/2;rig.wateringCan.visible=false;
     const bubble=new THREE.Sprite(bubbleMaterial);bubble.scale.set(.75,.45,1);bubble.center.set(-.3,-.1);bubble.visible=false;g.add(bubble);
     const label=document.createElement('button');label.className='name-label';label.type='button';label.textContent=person.initials;
-    label.title=`${person.initials}, ${person.role}`;label.setAttribute('aria-label',`View ${person.initials}, ${person.role}`);$('labels').append(label);
+    label.title=`${person.initials}, ${person.role}`;label.setAttribute('aria-label',`Lihat ${person.initials}, ${person.role}`);$('labels').append(label);
     const desk=desks[person.n];g.position.set(desk.x,0,desk.z);g.rotation.y=facing(desk);floors[3].add(g);
     const aisle=desk.route[0][0],stretchZ=desk.z-desk.f*.95;
-    const stretchSpot={x:desk.x,z:stretchZ,f:desk.f,floor:3,route:[[aisle,P3],[aisle,stretchZ]],state:'stretch',local:true,label:'Standing up'};
+    const stretchSpot={x:desk.x,z:stretchZ,f:desk.f,floor:3,route:[[aisle,P3],[aisle,stretchZ]],state:'stretch',local:true,label:'Berdiri'};
     const agent={...person,index,g,rig,bubble,label,desk,stretchSpot,heading:facing(desk),floor:3,spot:desk,path:[],destination:desk,state:'work',stairTrip:null,activity:null,visitor:null,nextRoutine:rand(6,25)};
     label.onclick=()=>selectAgent(agent);g.traverse(o=>{o.userData.agent=agent;});return agent;
   }
@@ -1095,19 +1095,19 @@
     while($('logList').children.length>40)$('logList').lastChild.remove();
     $('logEmpty').hidden=true;
   }
-  const ACTIVITY_LOG={drink:'gets a drink in the pantry',look:'reads the task board',lounge:'takes a break in the lounge',call:'takes a call in a phone booth',water:'waters the office plant'};
+  const ACTIVITY_LOG={drink:'mengambil minum di pantry',look:'membaca papan tugas',lounge:'rehat di lounge',call:'menelepon di phone booth',water:'menyiram tanaman kantor'};
   // Who joins prayer time is chosen by the user per person, never assumed.
   const PRAY_KEY='kantor-ai.musholla.v1';let prayers=new Set();
   try{prayers=new Set((JSON.parse(localStorage.getItem(PRAY_KEY)||'[]')||[]).filter(n=>TEAM.some(p=>p.n===n)));}catch{prayers=new Set();}
-  function savePrayers(){try{localStorage.setItem(PRAY_KEY,JSON.stringify([...prayers]));}catch{status('Prayer choices could not be saved in this browser. They stay in effect until the page reloads.');}}
+  function savePrayers(){try{localStorage.setItem(PRAY_KEY,JSON.stringify([...prayers]));}catch{status('Pilihan salat tidak dapat disimpan di browser ini. Pilihan tetap berlaku sampai halaman dimuat ulang.');}}
   function prayerTime() {
     const group=agents.filter(a=>prayers.has(a.n));
-    if(!group.length){status('Nobody has opted in yet. Pick a team member, then tick "Join at prayer time".');return;}
+    if(!group.length){status('Belum ada yang ikut. Pilih anggota tim, lalu centang "Ikut saat waktu salat".');return;}
     const going=group.slice(0,prayerSpots.length);
     going.forEach((a,i)=>assign(a,prayerSpots[i],rand(18,24)));
     const names=going.map(a=>a.initials).join(', ');
-    log(`Prayer time: ${names} to the prayer room`,going[0].group);
-    status(group.length>going.length?`Simulation: ${going.length} people to the prayer room. It holds ${prayerSpots.length} prayer mats.`:`Simulation: ${names} heading to the prayer room.`);
+    log(`Waktu salat: ${names} ke musholla`,going[0].group);
+    status(group.length>going.length?`Simulasi: ${going.length} orang ke musholla. Tersedia ${prayerSpots.length} sajadah.`:`Simulasi: ${names} menuju musholla.`);
   }
   const STAIR_DOOR=[-16,7.5];
   function setPath(agent,spot) {
@@ -1158,7 +1158,7 @@
   }
   function visitSpot(host) {
     const d=host.desk,side=-d.f,toCenter=d.x<GROUPS[host.group].x?1:-1,z=d.z+side*1.05,aisle=d.route[0][0];
-    return {x:d.x+toCenter*.75,z,f:d.f,floor:3,route:[[aisle,P3],[aisle,z]],state:'chat',host,label:`Walking over to ${host.initials}`};
+    return {x:d.x+toCenter*.75,z,f:d.f,floor:3,route:[[aisle,P3],[aisle,z]],state:'chat',host,label:`Menghampiri ${host.initials}`};
   }
   function assign(agent,spot,duration,extra={}) {
     setPath(agent,spot);
@@ -1172,18 +1172,18 @@
     const away=agents.filter(a=>a.activity).length,roll=Math.random();
     const habit=window.officeLife.habits[agent.index];
     if(roll<.6){
-      const preferred={'Coffee regular':'drink','Idea board reader':'look','Lounge thinker':'lounge','Stretch break regular':'stretch','Plant caretaker':'water'}[habit];
-      if(preferred==='stretch'){assign(agent,agent.stretchSpot,rand(3.5,6));log(`${agent.n} takes a favourite stretch break`,agent.group);return;}
+      const preferred={'Langganan kopi':'drink','Rajin membaca papan ide':'look','Berpikir di lounge':'lounge','Rutin peregangan':'stretch','Perawat tanaman':'water'}[habit];
+      if(preferred==='stretch'){assign(agent,agent.stretchSpot,rand(3.5,6));log(`${agent.n} meregangkan badan seperti biasa`,agent.group);return;}
       const spot=preferred&&pick(open(preferred));if(spot){assign(agent,spot,rand(7,12));log(`${agent.n} ${ACTIVITY_LOG[preferred]}`,agent.group);return;}
     }
-    if(roll<.28&&idle.length){const host=pick(prefer(idle));assign(agent,visitSpot(host),rand(7,12));host.visitor=agent;log(`${agent.n} walks over to ${host.n}`,agent.group);return;}
+    if(roll<.28&&idle.length){const host=pick(prefer(idle));assign(agent,visitSpot(host),rand(7,12));host.visitor=agent;log(`${agent.n} menghampiri ${host.n}`,agent.group);return;}
     if(roll>=.76&&roll<.9&&idle.length&&away<MAX_AWAY-1){
       const seats=shuffle(open('meet'));
       if(seats.length>=2){
         const others=shuffle(prefer(idle)).slice(0,away<MAX_AWAY-2&&Math.random()<.5?2:1);
         const meeting={members:[agent,...others]},duration=rand(10,16);
         meeting.members.forEach((m,i)=>assign(m,seats[i],duration,{meeting}));
-        log(`Quick meeting in the meeting room: ${meeting.members.map(m=>m.n).join(', ')}`,agent.group);return;
+        log(`Rapat singkat di ruang rapat: ${meeting.members.map(m=>m.n).join(', ')}`,agent.group);return;
       }
     }
     const kind=roll<.44?'drink':roll<.54?'look':roll<.66?'lounge':roll<.76?'call':null;
@@ -1362,11 +1362,11 @@
     // Rooftop spots are dealt out at random, so different people end up at the billiard table and coffee bar.
     const roofOrder=level===4?shuffle([...roofSpots]):[];
     agents.forEach((agent,i)=>setPath(agent,level===3?agent.desk:level===2?dining[i]:roofOrder[i]));
-    const message=level===3?'Simulation: the team heads back to their desks.':level===2?'Simulation: the team goes down for lunch.':'Simulation: the team heads up to the rooftop.';
-    status(message);log(message.replace('Simulation: t','T'));
+    const message=level===3?'Simulasi: tim kembali ke meja masing-masing.':level===2?'Simulasi: tim turun untuk makan siang.':'Simulasi: tim naik ke rooftop.';
+    status(message);log(message.replace('Simulasi: t','T'));
   }
   function commandMembers(members, action) {
-    if(!members.length){status('Pick at least one team member.');return false;}
+    if(!members.length){status('Pilih setidaknya satu anggota tim.');return false;}
     let spots;
     if(action==='meet'){
       spots=hangouts.filter(s=>s.state==='meet'&&(!s.occupant||members.includes(s.occupant)));
@@ -1375,31 +1375,31 @@
       spots=pool.filter(s=>!agents.some(a=>!members.includes(a)&&a.destination===s));
     }
     // Reserve the entire group before moving anyone; a full room must not split the invitation.
-    if(spots&&spots.length<members.length){status(`Only ${spots.length} places available. Choose fewer people or bring the current occupants back to work.`);return false;}
+    if(spots&&spots.length<members.length){status(`Hanya tersedia ${spots.length} tempat. Pilih lebih sedikit orang atau kembalikan yang sedang di sana ke meja.`);return false;}
     members.forEach(a=>clearActivity(a));
     members.forEach((a,i)=>{
       if(action==='meet')assign(a,spots[i],Infinity);
       else setPath(a,action==='work'?a.desk:spots[i]);
     });
     const names=members.map(a=>a.initials).join(', ');
-    const destination={meet:'the meeting room',lunch:'lunch',roof:'the rooftop',work:'their desks'}[action];
-    const message=`${names} heading to ${destination}.`;
-    status(message+(action==='meet'?' Use Back to work to end the meeting.':''));log(message,members[0].group);
+    const destination={meet:'ruang rapat',lunch:'makan siang',roof:'rooftop',work:'meja masing-masing'}[action];
+    const message=`${names} menuju ${destination}.`;
+    status(message+(action==='meet'?' Pakai Kembali bekerja untuk mengakhiri rapat.':''));log(message,members[0].group);
     return true;
   }
   function memberCommands(agent){
     const section=document.createElement('section');section.className='member-commands';
-    const label=document.createElement('label');label.htmlFor='iScope';label.textContent='Send instructions to';
+    const label=document.createElement('label');label.htmlFor='iScope';label.textContent='Kirim instruksi ke';
     const scope=document.createElement('select');scope.id='iScope';
-    for(const [value,text] of [['person',agent.initials],['division',GROUPS[agent.group].name],['custom','Choose people…']]){
+    for(const [value,text] of [['person',agent.initials],['division',GROUPS[agent.group].name],['custom','Pilih orang…']]){
       const option=document.createElement('option');option.value=value;option.textContent=text;scope.append(option);
     }
     const people=document.createElement('fieldset');people.id='iPeople';people.hidden=true;
-    const legend=document.createElement('legend');legend.textContent='People to include';people.append(legend);
+    const legend=document.createElement('legend');legend.textContent='Orang yang diikutkan';people.append(legend);
     for(const a of agents){const row=document.createElement('label');row.className='check';const input=document.createElement('input');input.type='checkbox';input.value=a.n;input.checked=a===agent;row.append(input,`${a.initials} · ${a.role}`);people.append(row);}
     scope.onchange=()=>{people.hidden=scope.value!=='custom';};
     const actions=document.createElement('div');actions.className='member-actions';
-    for(const [action,text] of [['meet','Meet together'],['lunch','Lunch'],['roof','Rooftop'],['work','Back to work']]){
+    for(const [action,text] of [['meet','Rapat bersama'],['lunch','Makan siang'],['roof','Rooftop'],['work','Kembali bekerja']]){
       const button=document.createElement('button');button.className='btn';button.textContent=text;button.dataset.command=action;
       button.onclick=()=>{const chosen=new Set([...people.querySelectorAll('input:checked')].map(i=>i.value));commandMembers(scope.value==='person'?[agent]:agents.filter(a=>scope.value==='division'?a.group===agent.group:chosen.has(a.n)),action);};actions.append(button);
     }
@@ -1408,10 +1408,10 @@
   function syncTaskDisplay(agent){
     const task=window.officeTasks.activeFor(agent.n);
     agent.label.classList.toggle('has-task',!!task);
-    const description=`${agent.initials}, ${agent.role}${task?` · In progress: ${task.title}`:''}`;
-    if(agent.label.title!==description){agent.label.title=description;agent.label.setAttribute('aria-label',`View ${description}`);}
+    const description=`${agent.initials}, ${agent.role}${task?` · Dikerjakan: ${task.title}`:''}`;
+    if(agent.label.title!==description){agent.label.title=description;agent.label.setAttribute('aria-label',`Lihat ${description}`);}
     if(selected===agent&&$('iActiveTask')){
-      const title=task?task.title:'No active task';
+      const title=task?task.title:'Tidak ada tugas aktif';
       if($('iActiveTask').textContent!==title)$('iActiveTask').textContent=title;
       const brief=task?.brief||'';
       if($('iTaskBrief').textContent!==brief)$('iTaskBrief').textContent=brief;
@@ -1420,28 +1420,28 @@
   }
   function agentStatus(agent) {
     const destination=agent.destination,others=companions(agent).map(o=>o.initials).join(' & ');
-    if(agent.state==='stairs')return `On the stairs to floor ${destination.floor}`;
+    if(agent.state==='stairs')return `Di tangga menuju lantai ${destination.floor}`;
     if(agent.state==='walk'){
       if(destination.label)return destination.label;
-      if(destination===agent.desk&&agent.floor===3)return 'Back to the desk';
-      return `Heading to ${FLOOR[destination.floor].name.toLowerCase()}`;
+      if(destination===agent.desk&&agent.floor===3)return 'Kembali ke meja';
+      return `Menuju ${FLOOR[destination.floor].name.toLowerCase()}`;
     }
     const text={
-      chat:others?`chatting with ${others}`:'colleague stepped away',
-      drink:others?`getting a drink with ${others}`:'getting a drink in the pantry',
-      look:others?`discussing at the task board with ${others}`:'reading the task board',
-      lounge:others?`chatting in the lounge with ${others}`:'relaxing in the lounge',
-      meet:others?`quick meeting with ${others}`:'waiting for colleagues in the meeting room',
-      call:'on a call in a phone booth',
-      stretch:'stretching for a moment',
-      water:'watering the office plant',
-      pray:'praying in the prayer room'
+      chat:others?`ngobrol dengan ${others}`:'rekan sedang pergi',
+      drink:others?`mengambil minum bersama ${others}`:'mengambil minum di pantry',
+      look:others?`berdiskusi di papan tugas dengan ${others}`:'membaca papan tugas',
+      lounge:others?`ngobrol di lounge dengan ${others}`:'bersantai di lounge',
+      meet:others?`rapat singkat dengan ${others}`:'menunggu rekan di ruang rapat',
+      call:'menelepon di phone booth',
+      stretch:'meregangkan badan sejenak',
+      water:'menyiram tanaman kantor',
+      pray:'salat di musholla'
     }[agent.state];
-    if(text)return `Simulation: ${text}`;
-    if(agent.floor===2)return 'Simulation: eating together';
-    if(agent.floor===4)return `Simulation: ${ROOF_STATUS[agent.spot?.fun]||'on the rooftop'}`;
-    if(others)return `Simulation: chatting with ${others}`;
-    return window.officeTasks.activeFor(agent.n)?.title || 'Simulation: working at the desk';
+    if(text)return `Simulasi: ${text}`;
+    if(agent.floor===2)return 'Simulasi: makan bersama';
+    if(agent.floor===4)return `Simulasi: ${ROOF_STATUS[agent.spot?.fun]||'di rooftop'}`;
+    if(others)return `Simulasi: ngobrol dengan ${others}`;
+    return window.officeTasks.activeFor(agent.n)?.title || 'Simulasi: bekerja di meja';
   }
   function selectAgent(agent) {
     stopTour();
@@ -1450,24 +1450,24 @@
     if(activeFloor!==0&&activeFloor!==agent.floor)setFloor(agent.floor,false);
     agent.label.classList.add('selected');$('teamSelect').value=agent.n;
     const info=$('info');info.replaceChildren();
-    const close=document.createElement('button');close.id='iClose';close.textContent='×';close.setAttribute('aria-label','Close details');close.onclick=()=>selectAgent(null);
+    const close=document.createElement('button');close.id='iClose';close.textContent='×';close.setAttribute('aria-label','Tutup detail');close.onclick=()=>selectAgent(null);
     const heading=document.createElement('h2');heading.textContent=agent.initials;
     const role=document.createElement('p');role.className='role';role.textContent=agent.role;
-    const habit=document.createElement('p');habit.className='role';habit.textContent=`Simulated habit: ${window.officeLife.habits[agent.index]}`;
+    const habit=document.createElement('p');habit.className='role';habit.textContent=`Kebiasaan simulasi: ${window.officeLife.habits[agent.index]}`;
     // Members connected to an AI agent on the server say so; everyone else stays a labelled simulation.
     const ai=window.officeTasks.agentFor(agent.n);
-    if(ai){const badge=document.createElement('span');badge.className='ai-badge';badge.textContent=ai.mode==='claude'?`AI agent · ${ai.model.replace(/^claude-/,'').replace(/-\d{8}$/,'').replace(/-(\d+)-(\d+)$/,' $1.$2').replace(/^\w/,c=>c.toUpperCase())}`:'AI agent · dry run';role.append(badge);}
+    if(ai){const badge=document.createElement('span');badge.className='ai-badge';badge.textContent=ai.mode==='claude'?`Agen AI · ${ai.model.replace(/^claude-/,'').replace(/-\d{8}$/,'').replace(/-(\d+)-(\d+)$/,' $1.$2').replace(/^\w/,c=>c.toUpperCase())}`:'Agen AI · uji coba';role.append(badge);}
     const list=document.createElement('dl');
-    for(const [title,value,id] of [['Desk group',GROUPS[agent.group].name,''],['Location',FLOOR[agent.floor].name,'iLocation'],['Activity',agentStatus(agent),'iActivity']]){
+    for(const [title,value,id] of [['Kelompok meja',GROUPS[agent.group].name,''],['Lokasi',FLOOR[agent.floor].name,'iLocation'],['Aktivitas',agentStatus(agent),'iActivity']]){
       const dt=document.createElement('dt');dt.textContent=title;const dd=document.createElement('dd');dd.textContent=value;if(id)dd.id=id;list.append(dt,dd);
     }
     const pray=document.createElement('label');pray.className='check';const box=document.createElement('input');box.type='checkbox';box.id='iPray';box.checked=prayers.has(agent.n);
-    box.onchange=()=>{if(box.checked)prayers.add(agent.n);else prayers.delete(agent.n);savePrayers();};pray.append(box,'Join at prayer time');
+    box.onchange=()=>{if(box.checked)prayers.add(agent.n);else prayers.delete(agent.n);savePrayers();};pray.append(box,'Ikut saat waktu salat');
     const view=document.createElement('div');view.className='view-buttons';
-    for(const [id,text,mode] of [['iEyes','First-person view','eyes'],['iChase','Follow from behind','chase']]){const b=document.createElement('button');b.id=id;b.className='btn';b.textContent=text;b.onclick=()=>startFollow(agent,mode);view.append(b);}
-    const tasks=document.createElement('button');tasks.id='iTasks';tasks.className='btn primary';tasks.textContent='View / assign tasks';tasks.onclick=()=>window.officeTasks.open(agent.n);
+    for(const [id,text,mode] of [['iEyes','Sudut orang pertama','eyes'],['iChase','Ikuti dari belakang','chase']]){const b=document.createElement('button');b.id=id;b.className='btn';b.textContent=text;b.onclick=()=>startFollow(agent,mode);view.append(b);}
+    const tasks=document.createElement('button');tasks.id='iTasks';tasks.className='btn primary';tasks.textContent='Lihat / beri tugas';tasks.onclick=()=>window.officeTasks.open(agent.n);
     const taskSection=document.createElement('section');taskSection.className='active-task';
-    const taskHeading=document.createElement('h3');taskHeading.textContent='Active task';
+    const taskHeading=document.createElement('h3');taskHeading.textContent='Tugas aktif';
     const taskTitle=document.createElement('p');taskTitle.id='iActiveTask';
     const taskBrief=document.createElement('p');taskBrief.id='iTaskBrief';
     taskSection.append(taskHeading,taskTitle,taskBrief,tasks);
@@ -1490,8 +1490,8 @@
     stopTour();if(follow)stopFollow(false);if(!['workspace','cat','building'].includes(route))return;
     setFloor(route==='building'?0:3);if(transition)stepTransition(Infinity);
     if(route==='cat'){officeCat.getWorldPosition(cam.target);cam.target.y+=.7;cam.radius=14;cam.phi=.9;}
-    if(reduceMotion){status('Reduced motion: a still camera view is selected.');return;}
-    tour={route};$('tourLabel').textContent={workspace:'Workspace tour',cat:'Following Moka',building:'Building tour'}[route];$('tourBar').hidden=false;
+    if(reduceMotion){status('Gerakan dikurangi: tampilan kamera diam dipilih.');return;}
+    tour={route};$('tourLabel').textContent={workspace:'Tur ruang kerja',cat:'Mengikuti Moka',building:'Tur gedung'}[route];$('tourBar').hidden=false;
   }
   function stepTour(dt){if(!tour||paused)return;if(tour.route==='cat'){const target=officeCat.getWorldPosition(new THREE.Vector3());target.y+=.7;cam.target.lerp(target,1-Math.exp(-dt*4));}else cam.theta+=dt*(tour.route==='building'?.12:.09);}
   function cameraFor(level){
@@ -1546,11 +1546,11 @@
     const from=activeFloor;activeFloor=level;buildingMood(level===0);if(clearSelection)selectAgent(null);
     showLevels(level?[level]:[1,2,3,4],level===0);skyline.visible=facade.visible=level===0;
     document.querySelectorAll('[data-floor]').forEach(b=>b.setAttribute('aria-pressed',Number(b.dataset.floor)===level?'true':'false'));
-    $('floorKicker').textContent=level?`Sheet 0${level} / 04`:'Building section';
-    $('floorTitle').textContent=level?FLOOR[level].title:'The office, bottom to top.';
-    $('floorDescription').textContent=level?FLOOR[level].description:'01 Barber & parking · 02 Kitchen · 03 Workspace · 04 Rooftop';
+    $('floorKicker').textContent=level?`Lembar 0${level} / 04`:'Bagian gedung';
+    $('floorTitle').textContent=level?FLOOR[level].title:'Kantor, dari bawah ke atas.';
+    $('floorDescription').textContent=level?FLOOR[level].description:'01 Barber & parkir · 02 Dapur · 03 Ruang kerja · 04 Rooftop';
     if(keepCamera)return;
-    status(level?'Pick a team member to see their role.':'Click a floor to enter it.');
+    status(level?'Pilih anggota tim untuk melihat perannya.':'Klik lantai untuk masuk.');
     if(viewReady&&!reduceMotion&&(from===0)!==(level===0))startTransition(from,level);else resetCamera();
   }
   // Character camera: 'eyes' looks out from the head like a first-person game, 'chase' follows from behind.
@@ -1559,9 +1559,9 @@
     buildingMood(false);
     follow={agent,mode,yaw:0,pitch:mode==='eyes'?-.12:-.32,distance:3.4,snap:true};
     agent.rig.head.visible=mode!=='eyes';cam.spin=0;skyline.visible=facade.visible=false;camera.fov=mode==='eyes'?68:55;camera.updateProjectionMatrix();
-    document.body.classList.add('following');$('followBar').hidden=false;$('followName').textContent=`Camera ${agent.initials}`;
+    document.body.classList.add('following');$('followBar').hidden=false;$('followName').textContent=`Kamera ${agent.initials}`;
     $('fEyes').setAttribute('aria-pressed',String(mode==='eyes'));$('fChase').setAttribute('aria-pressed',String(mode==='chase'));
-    status(mode==='eyes'?`Seeing through ${agent.initials}'s eyes. Drag to look around, Esc to exit.`:`Following ${agent.initials} from behind. Drag to orbit, scroll for distance, Esc to exit.`);
+    status(mode==='eyes'?`Melihat dari mata ${agent.initials}. Seret untuk melihat sekeliling, Esc untuk keluar.`:`Mengikuti ${agent.initials} dari belakang. Seret untuk mengitari, scroll untuk jarak, Esc untuk keluar.`);
   }
   function stopFollow(reset=true){
     if(!follow)return;follow.agent.rig.head.visible=true;follow=null;document.body.classList.remove('following');$('followBar').hidden=true;camera.fov=38;camera.updateProjectionMatrix();
@@ -1586,9 +1586,9 @@
     camera.lookAt(followLook);camera.updateMatrixWorld();
   }
   document.querySelectorAll('[data-floor]').forEach(b=>b.onclick=()=>setFloor(Number(b.dataset.floor)));
-  $('bPause').onclick=()=>{paused=!paused;$('bPause').textContent=paused?'Resume':'Pause';$('bPause').setAttribute('aria-pressed',String(paused));};
-  const syncRoutine=()=>{$('bRoutine').textContent=routineOn?'Routine: on':'Routine: off';$('bRoutine').setAttribute('aria-pressed',String(routineOn));};
-  $('bRoutine').onclick=()=>{routineOn=!routineOn;syncRoutine();status(routineOn?'Simulation: the team moves around the workspace on its own.':'Routine off. The team finishes what they are doing, then returns to their desks.');};syncRoutine();
+  $('bPause').onclick=()=>{paused=!paused;$('bPause').textContent=paused?'Lanjutkan':'Jeda';$('bPause').setAttribute('aria-pressed',String(paused));};
+  const syncRoutine=()=>{$('bRoutine').textContent=routineOn?'Rutinitas: nyala':'Rutinitas: mati';$('bRoutine').setAttribute('aria-pressed',String(routineOn));};
+  $('bRoutine').onclick=()=>{routineOn=!routineOn;syncRoutine();status(routineOn?'Simulasi: tim bergerak sendiri di ruang kerja.':'Rutinitas mati. Tim menyelesaikan kegiatannya, lalu kembali ke meja.');};syncRoutine();
   $('bPray').onclick=prayerTime;
   const syncLog=open=>{$('log').hidden=!open;$('bLog').setAttribute('aria-expanded',String(open));};
   $('bLog').onclick=()=>syncLog($('log').hidden);syncLog(innerWidth>1000);
@@ -1670,24 +1670,24 @@
   };
   canvas.addEventListener('wheel',onWheel,{passive:false});$('labels').addEventListener('wheel',onWheel,{passive:false});
   addEventListener('resize',()=>{if(transition)stepTransition(Infinity);if(innerWidth<=1000&&!$('log').hidden)syncLog(false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);resetCamera();});
-  const TASK_LOG={active:'started task',done:'finished task',blocked:'needs a decision before continuing',review:'submitted draft for review',queued:'moved task back to the queue'};
+  const TASK_LOG={active:'memulai tugas',done:'menyelesaikan tugas',blocked:'perlu keputusan sebelum melanjutkan',review:'mengirim draf untuk ditinjau',queued:'mengembalikan tugas ke antrean'};
   document.addEventListener('officetasks:server',()=>{
     for(const a of agents)a.label.classList.toggle('ai',!!window.officeTasks.agentFor(a.n));
     if(selected)selectAgent(selected);
   });
   // Speech bubbles for real task events: a short line on start and finish, and a steady one while an AI agent drafts.
-  const SAY={active:'On it!',blocked:'Quick question!',review:'Ready for review',done:'Done!'};
+  const SAY={active:'Siap kerjakan!',blocked:'Mau tanya!',review:'Siap ditinjau',done:'Beres!'};
   function say(agent,text,seconds=3.5){agent.sayText=text;agent.sayUntil=performance.now()+seconds*1000;}
   function sayingNow(agent){
     if(agent.sayUntil>performance.now())return agent.sayText;
-    return window.officeTasks.agentFor(agent.n)&&window.officeTasks.activeFor(agent.n)?'Drafting…':'';
+    return window.officeTasks.agentFor(agent.n)&&window.officeTasks.activeFor(agent.n)?'Menyusun draf…':'';
   }
   function syncBubble(agent){
     const text=sayingNow(agent);if(agent.sayShown===text)return;agent.sayShown=text;
     let bubble=agent.label.querySelector('.say');
     if(!text){bubble?.remove();return;}
     if(!bubble){bubble=document.createElement('span');bubble.className='say';bubble.setAttribute('aria-hidden','true');agent.label.append(bubble);}
-    bubble.textContent=text;bubble.classList.toggle('drafting',text==='Drafting…');
+    bubble.textContent=text;bubble.classList.toggle('drafting',text==='Menyusun draf…');
   }
   // Task board and log summary follow the task list, whether it lives in the browser or on the server.
   function drawBoard(){
@@ -1695,10 +1695,10 @@
     const priority={blocked:0,review:1,active:2,done:3,queued:4};
     const open=window.officeTasks.list().sort((a,b)=>priority[a.status]-priority[b.status]||(b.updatedAt||b.createdAt).localeCompare(a.updatedAt||a.createdAt));
     ctx.fillStyle='#fbf8f2';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#1e2230';ctx.font='700 44px Archivo, system-ui, sans-serif';ctx.textBaseline='middle';ctx.fillText('WORK BOARD',36,48);
-    ctx.fillStyle='#6b6f7b';ctx.font='500 28px Archivo, system-ui, sans-serif';ctx.textAlign='right';ctx.fillText(`${open.length} tasks`,W-36,50);ctx.textAlign='left';
+    ctx.fillStyle='#1e2230';ctx.font='700 44px Archivo, system-ui, sans-serif';ctx.textBaseline='middle';ctx.fillText('PAPAN KERJA',36,48);
+    ctx.fillStyle='#6b6f7b';ctx.font='500 28px Archivo, system-ui, sans-serif';ctx.textAlign='right';ctx.fillText(`${open.length} tugas`,W-36,50);ctx.textAlign='left';
     ctx.fillStyle='#1565c0';ctx.fillRect(36,86,90,6);
-    if(!open.length){ctx.fillStyle='#6b6f7b';ctx.font='500 34px Archivo, system-ui, sans-serif';ctx.fillText('No open tasks. Add one from Tasks.',36,230);}
+    if(!open.length){ctx.fillStyle='#6b6f7b';ctx.font='500 34px Archivo, system-ui, sans-serif';ctx.fillText('Tidak ada tugas terbuka. Tambahkan dari Tugas.',36,230);}
     open.slice(0,5).forEach((task,i)=>{
       const y=150+i*70,person=TEAM.find(p=>p.n===task.assignee);
       ctx.fillStyle=person?hex(GROUPS[person.group].color):'#8a8479';ctx.beginPath();ctx.roundRect(36,y-22,86,44,10);ctx.fill();
@@ -1706,26 +1706,26 @@
       ctx.fillStyle='#1e2230';ctx.font='500 30px Archivo, system-ui, sans-serif';
       let title=task.title;while(ctx.measureText(title).width>640&&title.length>4)title=title.slice(0,-2);if(title!==task.title)title=title.trimEnd()+'…';
       ctx.fillText(title,142,y+1);
-      const [chip,ink,label]={active:['#fdeee9','#c24a31','In progress'],blocked:['#fff1d6','#9a6212','Question'],review:['#e8f3ec','#2f6b47','Review'],done:['#e8f3ec','#2f6b47','Finished']}[task.status]||['#f0ece5','#6b6f7b','Queued'];
+      const [chip,ink,label]={active:['#fdeee9','#c24a31','Dikerjakan'],blocked:['#fff1d6','#9a6212','Pertanyaan'],review:['#e8f3ec','#2f6b47','Tinjau'],done:['#e8f3ec','#2f6b47','Selesai']}[task.status]||['#f0ece5','#6b6f7b','Antre'];
       ctx.fillStyle=chip;ctx.beginPath();ctx.roundRect(W-212,y-20,176,40,20);ctx.fill();
       ctx.fillStyle=ink;ctx.font='600 22px Archivo, system-ui, sans-serif';ctx.textAlign='center';ctx.fillText(label,W-124,y+1);ctx.textAlign='left';
     });
-    if(open.length>5){ctx.fillStyle='#6b6f7b';ctx.font='500 24px Archivo, system-ui, sans-serif';ctx.fillText(`+${open.length-5} more in Tasks`,142,H-30);}
+    if(open.length>5){ctx.fillStyle='#6b6f7b';ctx.font='500 24px Archivo, system-ui, sans-serif';ctx.fillText(`+${open.length-5} lagi di Tugas`,142,H-30);}
     boardTexture.needsUpdate=true;
     drawMonitors();
   }
   function drawMonitors(){
     const tasks=window.officeTasks.list(),priority={active:0,blocked:1,review:2,queued:3,done:4};
     for(const display of monitorDisplays){const task=tasks.filter(t=>t.assignee===display.member).sort((a,b)=>priority[a.status]-priority[b.status]||(b.updatedAt||b.createdAt).localeCompare(a.updatedAt||a.createdAt))[0];
-      const state=task?{active:window.officeTasks.agentFor(display.member)?'Drafting':'In progress',blocked:'Needs decision',review:'Ready for review',queued:'Queued',done:'Finished'}[task.status]:'Idle';display.status=state;display.taskId=task?.id||null;
-      const ctx=display.canvas.getContext('2d');ctx.fillStyle='#0a2a5c';ctx.fillRect(0,0,512,256);ctx.fillStyle='#f8f3e8';ctx.textBaseline='top';ctx.font='bold 28px Archivo, sans-serif';ctx.fillText(TEAM.find(p=>p.n===display.member)?.initials||'',24,20);ctx.font='bold 34px Archivo, sans-serif';ctx.fillText(state,24,76);ctx.font='24px Archivo, sans-serif';let title=task?.title||'Ready for a new task';while(ctx.measureText(title).width>460&&title.length>4)title=title.slice(0,-2);if(task&&title!==task.title)title+='…';ctx.fillText(title,24,138);ctx.font='20px Archivo, sans-serif';ctx.fillText(task?.by==='dry-run'?'DRY RUN · Example draft':'Click to open tasks',24,210);display.texture.needsUpdate=true;
+      const state=task?{active:window.officeTasks.agentFor(display.member)?'Menyusun draf':'Dikerjakan',blocked:'Perlu keputusan',review:'Siap ditinjau',queued:'Antre',done:'Selesai'}[task.status]:'Senggang';display.status=state;display.taskId=task?.id||null;
+      const ctx=display.canvas.getContext('2d');ctx.fillStyle='#0a2a5c';ctx.fillRect(0,0,512,256);ctx.fillStyle='#f8f3e8';ctx.textBaseline='top';ctx.font='bold 28px Archivo, sans-serif';ctx.fillText(TEAM.find(p=>p.n===display.member)?.initials||'',24,20);ctx.font='bold 34px Archivo, sans-serif';ctx.fillText(state,24,76);ctx.font='24px Archivo, sans-serif';let title=task?.title||'Siap untuk tugas baru';while(ctx.measureText(title).width>460&&title.length>4)title=title.slice(0,-2);if(task&&title!==task.title)title+='…';ctx.fillText(title,24,138);ctx.font='20px Archivo, sans-serif';ctx.fillText(task?.by==='dry-run'?'UJI COBA · Contoh draf':'Klik untuk membuka tugas',24,210);display.texture.needsUpdate=true;
     }
   }
   function drawStats(){
     const list=window.officeTasks.list(),today=new Date().toDateString();
     const busy=new Set(list.filter(t=>t.status==='active').map(t=>t.assignee)).size;
     const done=list.filter(t=>t.status==='done'&&new Date(t.updatedAt||t.createdAt).toDateString()===today).length;
-    $('logStats').replaceChildren(...[['On a task',busy],['Free',TEAM.length-busy],['Done today',done]].map(([label,value])=>{
+    $('logStats').replaceChildren(...[['Bertugas',busy],['Senggang',TEAM.length-busy],['Selesai hari ini',done]].map(([label,value])=>{
       const item=document.createElement('div');const number=document.createElement('strong');number.textContent=value;
       const caption=document.createElement('span');caption.textContent=label;item.append(number,caption);return item;
     }));
@@ -1733,13 +1733,13 @@
     const waiting=list.filter(t=>t.status==='blocked'),button=$('decisions');button.hidden=!waiting.length;
     if(waiting.length){
       const who=[...new Set(waiting.map(t=>TEAM.find(p=>p.n===t.assignee)?.initials||t.assignee))].join(', ');
-      button.textContent=`${waiting.length} ${waiting.length===1?'task needs':'tasks need'} your decision · ${who}`;
+      button.textContent=`${waiting.length} tugas perlu keputusan Anda · ${who}`;
     }
   }
   $('decisions').onclick=()=>window.officeTasks.open(null,'blocked');
   document.addEventListener('officetasks:change',()=>{drawBoard();drawStats();});
   document.addEventListener('officetasks:server',drawMonitors);
-  window.officeTasks.init(TEAM,(name,state,title)=>{const a=agents.find(a=>a.n===name);if(a&&window.officeTasks.activeFor(name))setPath(a,a.desk);if(a&&SAY[state])say(a,SAY[state]);if(a&&state==='done'&&window.officeLife.preferences.celebrate){a.celebrateUntil=simTime+2.5;log(`${name} celebrates a finished task`,a.group);}if(a&&state)log(`${name} ${TASK_LOG[state]}: ${title}`,a.group);},name=>{const a=agents.find(a=>a.n===name);if(a)selectAgent(a);});
+  window.officeTasks.init(TEAM,(name,state,title)=>{const a=agents.find(a=>a.n===name);if(a&&window.officeTasks.activeFor(name))setPath(a,a.desk);if(a&&SAY[state])say(a,SAY[state]);if(a&&state==='done'&&window.officeLife.preferences.celebrate){a.celebrateUntil=simTime+2.5;log(`${name} merayakan tugas yang selesai`,a.group);}if(a&&state)log(`${name} ${TASK_LOG[state]}: ${title}`,a.group);},name=>{const a=agents.find(a=>a.n===name);if(a)selectAgent(a);});
   window.officeLife.init(TEAM,GROUPS);
   let currentMood='',lastMoodChoice='',lastMoodMinute=-1;
   const officeCat=new THREE.Group();floors[3].add(officeCat);officeCat.position.set(10,.08,P3);
@@ -1749,28 +1749,28 @@
   const catLegs=[];for(const x of [-.2,.2])for(const z of [-.3,.3])catLegs.push(oval(.15,.3,.17,0x976a42,x,.15,z,officeCat));
   const catTail=mesh(new THREE.CylinderGeometry(.055,.07,.8,10),0x976a42,0,.58,-.65,officeCat,false);catTail.rotation.x=-.6;
   officeCat.traverse(o=>o.userData.cat=true);
-  const cat={state:'resting',until:0,path:[],target:null,petUntil:0};
-  function petCat(){cat.petUntil=simTime+4;cat.until=Math.max(cat.until,simTime+4);$('catStatus').textContent='Moka purrs. A very good office cat.';status('Moka purrs.');log('Moka enjoys a head scratch');}
+  const cat={state:'beristirahat',until:0,path:[],target:null,petUntil:0};
+  function petCat(){cat.petUntil=simTime+4;cat.until=Math.max(cat.until,simTime+4);$('catStatus').textContent='Moka mendengkur. Kucing kantor yang sangat baik.';status('Moka mendengkur.');log('Moka senang kepalanya digaruk');}
   function stepCat(dt){
     if(!dt)return;
     if(cat.petUntil>simTime){catTail.rotation.z=Math.sin(simTime*5)*.25;return;}
     if(cat.path.length){const point=cat.path[0],dx=point[0]-officeCat.position.x,dz=point[1]-officeCat.position.z,d=Math.hypot(dx,dz),step=dt*1.25;
       if(d<=step){officeCat.position.x=point[0];officeCat.position.z=point[1];cat.path.shift();}else{officeCat.position.x+=dx/d*step;officeCat.position.z+=dz/d*step;officeCat.rotation.y=Math.atan2(dx,dz);}
-      catLegs.forEach((leg,i)=>leg.rotation.x=Math.sin(simTime*8+i*Math.PI)*.3);cat.state='walking';
-      if(!cat.path.length){cat.state=cat.target?.sleep?'sleeping on the sofa':cat.target?.desk?'visiting a free desk':'resting';cat.until=simTime+rand(12,24);officeCat.position.y=cat.target?.sleep?.55:cat.target?.desk?.9:.08;}
+      catLegs.forEach((leg,i)=>leg.rotation.x=Math.sin(simTime*8+i*Math.PI)*.3);cat.state='berjalan-jalan';
+      if(!cat.path.length){cat.state=cat.target?.sleep?'tidur di sofa':cat.target?.desk?'mampir ke meja kosong':'beristirahat';cat.until=simTime+rand(12,24);officeCat.position.y=cat.target?.sleep?.55:cat.target?.desk?.9:.08;}
     }else if(simTime>cat.until&&routineOn){
       officeCat.position.y=.08;const idle=agents.filter(a=>a.floor===3&&!window.officeTasks.activeFor(a.n)&&a.spot===a.desk&&!a.activity&&!a.visitor);
       const visitor=Math.random()<.35&&pick(idle),target=visitor?{x:visitor.desk.x,z:visitor.desk.z+visitor.desk.f*.9,desk:true}:pick([{x:10,z:P3},{x:12.6,z:-10.2},{x:14.75,z:-6.7,sleep:true}]);
       const route=navPath(3,[officeCat.position.x,officeCat.position.z],[target.x,target.z],null,null);
       if(route){cat.target=target;cat.path=route;cat.until=simTime+15;}else cat.until=simTime+5;
     }
-    officeCat.scale.set(1,cat.state==='sleeping on the sofa'?.65:1,1);catTail.rotation.z=Math.sin(simTime*1.8)*.15;
-    $('catStatus').textContent=`Moka is ${cat.state}.`;
+    officeCat.scale.set(1,cat.state==='tidur di sofa'?.65:1,1);catTail.rotation.z=Math.sin(simTime*1.8)*.15;
+    $('catStatus').textContent=`Moka sedang ${cat.state}.`;
   }
   function coffee(members){
     const guests=members.map(n=>agents.find(a=>a.n===n));if(guests.some(a=>!a)||new Set(members).size!==2)return false;
     const seats=hangouts.filter(s=>s.state==='drink'&&(!s.occupant||guests.includes(s.occupant)));if(seats.length<2)return false;
-    guests.forEach(clearActivity);const meeting={members:guests};guests.forEach((a,i)=>assign(a,seats[i],18,{meeting}));log(`${members.join(' and ')} meet for coffee`,guests[0].group);return true;
+    guests.forEach(clearActivity);const meeting={members:guests};guests.forEach((a,i)=>assign(a,seats[i],18,{meeting}));log(`${members.join(' dan ')} bertemu untuk ngopi`,guests[0].group);return true;
   }
   const posterCanvas=document.createElement('canvas');posterCanvas.width=640;posterCanvas.height=400;
   const posterTexture=new THREE.CanvasTexture(posterCanvas);posterTexture.encoding=THREE.sRGBEncoding;
@@ -1789,7 +1789,7 @@
     appearance={...settings};
     const palette={chairs:{sage:0x82967b,clay:0xc28669},rugs:{sand:0xd6c7ac,slate:0xa3b1ba},plants:{lush:0x42694a,autumn:0xb87d46}};
     for(const kind of ['chairs','rugs','plants'])for(const entry of decorations[kind]){if(!entry.custom){entry.object.material=entry.object.material.clone();entry.custom=true;}const tint=palette[kind][settings[kind]];entry.object.material.color.copy(tint===undefined?entry.original:linear(tint));}
-    const ctx=posterCanvas.getContext('2d');ctx.fillStyle=settings.poster==='details'?'#fbefc9':'#e3ecf8';ctx.fillRect(0,0,640,400);ctx.fillStyle='#0a2a5c';ctx.font='700 50px Archivo, sans-serif';ctx.textAlign='center';const words=settings.poster==='details'?['Care for','the details.']:['Make room','for ideas.'];words.forEach((line,i)=>ctx.fillText(line,320,170+i*70));posterTexture.needsUpdate=true;
+    const ctx=posterCanvas.getContext('2d');ctx.fillStyle=settings.poster==='details'?'#fbefc9':'#e3ecf8';ctx.fillRect(0,0,640,400);ctx.fillStyle='#0a2a5c';ctx.font='700 50px Archivo, sans-serif';ctx.textAlign='center';const words=settings.poster==='details'?['Peduli pada','detail.']:['Beri ruang','untuk ide.'];words.forEach((line,i)=>ctx.fillText(line,320,170+i*70));posterTexture.needsUpdate=true;
     rain.visible=settings.weather==='rain';stepRain(0);applyOfficeMood();
   }
   const projected=new THREE.Vector3(),world=new THREE.Vector3();let last=performance.now();
@@ -1840,12 +1840,12 @@
     }
     if(selected){
       selected.g.getWorldPosition(world);ring.position.set(world.x,world.y+.07,world.z);ring.visible=!follow&&selected.g.visible&&visibleAgent(selected);
-      $('iLocation').textContent=selected.state==='stairs'?`Left stairs · ${selected.stairTrip.from} to ${selected.stairTrip.to}`:`Floor ${selected.floor} · ${FLOOR[selected.floor].name}`;$('iActivity').textContent=agentStatus(selected);
+      $('iLocation').textContent=selected.state==='stairs'?`Tangga kiri · ${selected.stairTrip.from} ke ${selected.stairTrip.to}`:`Lantai ${selected.floor} · ${FLOOR[selected.floor].name}`;$('iActivity').textContent=agentStatus(selected);
     }
     for(let level=1;level<=4;level++){
       const count=agents.filter(a=>a.floor===level&&a.state!=='stairs').length;
       const badge=document.querySelector(`[data-floor="${level}"] .floor-count`);
-      if(badge&&badge.textContent!==String(count)){badge.textContent=String(count);badge.setAttribute('aria-label',`${count} team members on this floor`);}
+      if(badge&&badge.textContent!==String(count)){badge.textContent=String(count);badge.setAttribute('aria-label',`${count} anggota tim di lantai ini`);}
     }
     renderer.render(scene,camera);
   }
