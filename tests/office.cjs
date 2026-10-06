@@ -49,7 +49,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
  await page.click('#bPray');assert.match(await page.locator('#sceneStatus').innerText(),/Nobody has opted in/);
  await page.selectOption('#teamSelect','Kak Laras');await page.check('#iPray');await page.click('#bPray');
  await page.waitForFunction(()=>officeScene.snapshot().team.find(p=>p.name==='Kak Laras').state==='pray',null,{timeout:60000});
- assert.match(await page.locator('#logList').innerText(),/Prayer time: AI to the prayer room/);
+ assert.match(await page.locator('#logList').innerText(),/Prayer time: KL to the prayer room/);
  console.log('PASS: office log, prayer opt-in, only opted-in member goes to the musholla');
  await page.waitForFunction(()=>officeScene.snapshot().doors.some(v=>v>.8),null,{timeout:120000});
  console.log('PASS: a room door opens when someone walks through');

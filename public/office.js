@@ -1794,12 +1794,14 @@
   }
   const projected=new THREE.Vector3(),world=new THREE.Vector3();let last=performance.now();
   function frame(now) {
-    // Allow slower renderers to keep pace, while limiting jumps after a background-tab pause.
-    requestAnimationFrame(frame);const realDt=Math.min(.15,(now-last)/1000);last=now;const dt=paused?0:realDt;simTime+=dt;
+    // Camera and UI motion use a capped frame step. The simulation catches up in steps of at most 0.15 s,
+    // so people keep real-time pace on slow (software) renderers, while a background-tab pause skips ahead at most 1 s.
+    requestAnimationFrame(frame);const elapsed=Math.min(1,(now-last)/1000),realDt=Math.min(.15,elapsed);last=now;
+    const simSteps=paused?1:Math.max(1,Math.ceil(elapsed/.15)),dt=paused?0:elapsed/simSteps;
     if(document.querySelector('dialog[open]')){for(const k in keys)keys[k]=false;}
     if(transition&&!follow)stepTransition(realDt);
     if(!drag&&cam.spin){cam.theta+=cam.spin*realDt;cam.spin*=Math.pow(.03,realDt);if(Math.abs(cam.spin)<.01)cam.spin=0;}
-    stepTour(realDt);stepRain(dt);
+    stepTour(realDt);stepRain(dt*simSteps);
     const move=realDt*cam.radius*.3,fx=-Math.sin(cam.theta),fz=-Math.cos(cam.theta);
     if(keys.w){cam.target.x+=fx*move;cam.target.z+=fz*move;}if(keys.s){cam.target.x-=fx*move;cam.target.z-=fz*move;}
     if(keys.d){cam.target.x-=fz*move;cam.target.z+=fx*move;}if(keys.a){cam.target.x+=fz*move;cam.target.z-=fx*move;}
@@ -1810,11 +1812,15 @@
     cam.target.x=Math.max(-25,Math.min(25,cam.target.x));cam.target.z=Math.max(-20,Math.min(20,cam.target.z));
     if(follow){if(keys.arrowleft)follow.yaw+=realDt*1.6;if(keys.arrowright)follow.yaw-=realDt*1.6;if(keys.arrowup)follow.pitch=Math.min(.9,follow.pitch+realDt);if(keys.arrowdown)follow.pitch=Math.max(-1.2,follow.pitch-realDt);}
     else{camera.position.set(cam.target.x+cam.radius*Math.sin(cam.phi)*Math.sin(cam.theta),cam.target.y+cam.radius*Math.cos(cam.phi),cam.target.z+cam.radius*Math.sin(cam.phi)*Math.cos(cam.theta));camera.lookAt(cam.target);camera.updateMatrixWorld();}
-    for(const a of agents){updateAgent(a,dt);if(dt>0)live(a);syncTaskDisplay(a);}
-    stepCat(dt);const minute=Math.floor(Date.now()/60000);if(lastMoodChoice!==window.officeLife.preferences.mood||lastMoodMinute!==minute){applyOfficeMood();lastMoodChoice=window.officeLife.preferences.mood;lastMoodMinute=minute;}
-    if(skyline.visible)animateSky(dt);
-    stepShop(dt);
-    for(const d of doors){const near=agents.some(a=>a.floor===d.floor&&a.state!=='stairs'&&a.g.position.distanceTo(d.center)<1.6);d.open+=((near?1:0)-d.open)*Math.min(1,dt*6);d.pivot.rotation.y=d.base+d.open*1.45;}
+    for(let step=0;step<simSteps;step++){
+      simTime+=dt;
+      for(const a of agents){updateAgent(a,dt);if(dt>0)live(a);}
+      stepCat(dt);stepShop(dt);
+    }
+    for(const a of agents)syncTaskDisplay(a);
+    const minute=Math.floor(Date.now()/60000);if(lastMoodChoice!==window.officeLife.preferences.mood||lastMoodMinute!==minute){applyOfficeMood();lastMoodChoice=window.officeLife.preferences.mood;lastMoodMinute=minute;}
+    if(skyline.visible)animateSky(dt*simSteps);
+    for(const d of doors){const near=agents.some(a=>a.floor===d.floor&&a.state!=='stairs'&&a.g.position.distanceTo(d.center)<1.6);d.open+=((near?1:0)-d.open)*Math.min(1,dt*simSteps*6);d.pivot.rotation.y=d.base+d.open*1.45;}
     if(follow){scene.updateMatrixWorld(true);followCamera(realDt);}
     scene.updateMatrixWorld(true);
     const occupied=[];
