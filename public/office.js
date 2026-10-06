@@ -69,7 +69,7 @@
   const passage = level => level === 3 ? 1.5 : 0;
   // Storey height: the tallest interior (walls, beams, rooftop canopy) is 3.5, plus the 0.48 slab and a little air.
   const FLOOR_GAP=4.4, floorY=level=>(level-1)*FLOOR_GAP;
-  const stairways={}, travelRoot=new THREE.Group();scene.add(travelRoot);
+  const travelRoot=new THREE.Group();scene.add(travelRoot);
 
   // Paper-model rendering: three flat tone steps plus ink edges on every folded card.
   const toneSteps = new THREE.DataTexture(new Uint8Array([165, 215, 255]), 3, 1, THREE.LuminanceFormat);
@@ -144,9 +144,11 @@
     }
   }
   const doorPads=[];
-  function stairs(level) {
-    doorPads.push(box(2,.12,2.6,0xcfc8ba,-16.8,-.12,7));
-    textPlane('STAIRS',-14.2,6.9,2.5);
+  function liftLanding(level) {
+    // Landing outside the left door, joining both lift cabins.
+    doorPads.push(box(2,.12,2.6,0xcfc8ba,-16.8,-.12,7.5));
+    doorPads.push(box(1.5,.12,6.6,0xcfc8ba,-17.2,-.12,7.5));
+    textPlane('LIFT',-13.6,7.5,1.6);
   }
   // Restroom: a closed, roofed box with a door and a WC sign. Nothing inside is modelled, for privacy.
   // (cx, cz) is the centre, (w, d) the size along x and z, and face the side the door is on.
@@ -194,7 +196,7 @@
         box(7.98,.003,.985,[0xe3e6eb,0xdbdfe6,0xe9ecf0][(row+col)%3],-12+col*8,.032,-11.5+row);
       }
     }
-    stairs(level);
+    liftLanding(level);
   }
 
   shell(1);
@@ -520,7 +522,7 @@
     box(1.5,.28,1.1,0xe2ded6,FX+2.6,top,PZ+.4);box(.5,.85,.32,NAVY,FX+2.6,top+.28,PZ+.1);
     const sign=textPlane('LAPANGAN UPACARA',FX,FZ+FD/2-.7,5);sign.position.y=top+.01;
   }
-  // Rooftop door from the stair core: a white frame with two glass leaves, always open and folded back inside.
+  // Rooftop door from the lift landing: a white frame with two glass leaves, always open and folded back inside.
   const DOOR_FRAME=0xf6f4ef;
   box(.22,.85,.8,CARD,-16,0,5.9);
   for(const z of [6.3,8.5])box(.14,2.35,.14,DOOR_FRAME,-16,0,z);
@@ -597,29 +599,22 @@
   for(const z of [-2.5,-1.5,-.5,.5]){plant(15.5,z,.22,2.37);cylinder(.08,.07,.17,CARD,15.45,1.87,z);}
   roofSpot(14.1,-1,Math.PI/2,'mengambil kopi di bar rooftop',{standing:true,roofPose:'coffee'});
 
-  function flight(x,z1,z2,y1,y2,parent) {
-    const steps=16,run=(z2-z1)/steps,rise=(y2-y1)/steps;
-    for(let i=0;i<steps;i++){
-      box(2.4,.18,Math.abs(run)+.015,0xcfc8ba,x,y1+rise*(i+1)-.18,z1+run*(i+.5),parent);
-      if(i%4===0)for(const side of [-1,1])box(.045,.95,.045,DARK,x+side*1.15,y1+rise*(i+1),z1+run*(i+.5),parent);
-    }
-    for(const side of [-1,1]){
-      const a=new THREE.Vector3(x+side*1.15,y1+.95,z1),b=new THREE.Vector3(x+side*1.15,y2+.95,z2);
-      const rail=mesh(new THREE.CylinderGeometry(.035,.035,a.distanceTo(b),8),DARK,0,0,0,parent,false);
-      rail.position.copy(a).add(b).multiplyScalar(.5);rail.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.sub(a).normalize());
-    }
-  }
-  for(let lower=1;lower<=3;lower++){
-    const bridge=new THREE.Group();bridge.position.y=floorY(lower);stairways[lower]=bridge;scene.add(bridge);
-    box(3.7,.18,2.6,0xcfc8ba,-17.15,-.18,7,bridge);
-    const half=FLOOR_GAP/2;
-    flight(-18.5,7,1,0,half,bridge);
-    box(5.5,.18,2.6,0xcfc8ba,-20,half-.18,1,bridge);
-    flight(-21.5,1,7,half,FLOOR_GAP,bridge);
-    box(7,.18,2.6,0xcfc8ba,-19,FLOOR_GAP-.18,7,bridge);
-    for(const x of [-22.75,-17.25])box(.08,1.05,2.6,DARK,x,half,1,bridge);
-  }
-  // Glass curtain walls for the whole-building view: floors 1 to 3 are enclosed storeys, the stair core is glazed too.
+  // Two glass lifts in a slim tower beside the left door: the cabin at z 5.6 carries people up, the one at z 9.4 down.
+  // The tower and cabins are drawn in the building view; each cabin travels with its riders.
+  const liftShaft=new THREE.Group();scene.add(liftShaft);
+  const LIFT_X=-18.9,LIFT_HALL_X=-17.3,LIFT_SEATS=6,LIFT_TOP=floorY(4)+3;
+  for(const z of [4.5,6.7,8.3,10.5])for(const x of [-19.95,-17.85])box(.1,LIFT_TOP,.1,0xf6f4ef,x,0,z,liftShaft);
+  box(.04,LIFT_TOP,6.1,'roofglass',-20,0,7.5,liftShaft);
+  for(const z of [4.45,10.55])box(2.1,LIFT_TOP,.04,'roofglass',-18.9,0,z,liftShaft);
+  box(2.4,.5,6.4,NAVY,-18.9,LIFT_TOP,7.5,liftShaft);box(2.42,.06,6.42,GOLD,-18.9,LIFT_TOP+.5,7.5,liftShaft);
+  const lifts=[5.6,9.4].map((z,i)=>{
+    const g=new THREE.Group();g.position.set(LIFT_X,floorY(3),z);liftShaft.add(g);
+    box(2,.12,2,0xd9d4ca,0,-.12,0,g);box(.05,2.3,2,'glass',-.98,0,0,g);
+    for(const s of [-1,1]){box(2,2.3,.05,'glass',0,0,s*.98,g);box(.08,2.3,.08,0xf6f4ef,.96,0,s*.96,g);box(.08,2.3,.08,0xf6f4ef,-.96,0,s*.96,g);}
+    box(2.1,.14,2.1,NAVY,0,2.3,0,g);box(2.12,.04,2.12,GOLD,0,2.26,0,g);
+    return {z,g,y:floorY(3),floor:3,state:'idle',target:3,to:3,riders:[],queue:[],timer:0};
+  });
+  // Glass curtain walls for the whole-building view: floors 1 to 3 are enclosed storeys, the lift tower stands beside the left door.
   const facade=new THREE.Group();scene.add(facade);facade.visible=false;
   // Each storey's glass sits in its own group so it can travel and fade with that floor during camera transitions.
   const facadeLevels={};
@@ -632,7 +627,7 @@
     const edge=box(33.4,.56,25.4,NAVY,0,y-.54,0,lg);box(33.5,.06,25.5,GOLD,0,y-.06,0,lg);edge.userData.level=level;
     if(level===4){
       // Rooftop: a glass balustrade with a white handrail on the parapet.
-      // The left side stops at the stair door (z 5.5 to 8.5), where the rooftop door stands open.
+      // The left side stops at the lift door (z 5.5 to 8.5), where the rooftop door stands open.
       for(const [w,d,x,z] of [[33,.05,0,12.55],[33,.05,0,-12.55],[.05,25,16.55,0],[.05,18,-16.55,-3.5],[.05,4,-16.55,10.5]]){
         glazing(w,1.15,d,x,y,z,lg);box(Math.max(w,.12),.08,Math.max(d,.12),FRAME,x,y+1.15,z,lg);
       }
@@ -640,19 +635,12 @@
     }
     if(level===1)glazing(16.5,h,.05,-8.25,y,12.55,lg);else glazing(33,h,.05,0,y,12.55,lg);
     glazing(33,h,.05,0,y,-12.55,lg);glazing(.05,h,25,16.55,y,0,lg);
-    glazing(.05,h,12.4,-16.55,y,-6.3,lg);glazing(.05,h,3.6,-16.55,y,10.7,lg);
+    glazing(.05,h,17.4,-16.55,y,-3.8,lg);glazing(.05,h,3.6,-16.55,y,10.7,lg);
     for(let x=-16.5;x<=16.51;x+=33/8)for(const z of [-12.55,12.55])if(level!==1||z<0||x<.1)box(.14,h,.14,FRAME,x,y,z,lg);
     // The parking entrance keeps two structural columns and a header beam, wide enough for cars.
     if(level===1){for(const x of [8.25,16.5])box(.3,h,.3,FRAME,x,y,12.55,lg);box(16.5,.35,.3,FRAME,8.25,y+h-.35,12.55,lg);}
     for(let z=-12.5;z<=12.51;z+=25/6)box(.14,h,.14,FRAME,16.55,y,z,lg);
     for(const z of [-12.55,-.1,4.9,8.9,12.55])box(.14,h,.14,FRAME,-16.55,y,z,lg);
-  }
-  {
-    // The stair core rises well above the rooftop floor, so people arriving on the last flight keep their heads inside it.
-    const top=floorY(4)+2.7;
-    glazing(.05,top,9.6,-23.3,0,3.9,facade);glazing(7,top,.05,-19.8,0,8.7,facade);glazing(7,top,.05,-19.8,0,-.9,facade);
-    for(const [x,z] of [[-23.3,-.9],[-23.3,8.7],[-16.6,-.9],[-16.6,8.7]])box(.16,top,.16,FRAME,x,0,z,facade);
-    box(7.1,.12,9.9,FRAME,-19.95,top,3.9,facade);
   }
   facade.traverse(o=>{o.castShadow=false;});
   const eveningLights=[];
@@ -685,34 +673,55 @@
   // Parts that fade during camera transitions get their own material copies, so floors keep full opacity.
   function prepareFade(root){root.traverse(o=>{if(!o.material)return;o.material=o.material.clone();o.material.transparent=true;o.userData.baseOpacity=o.material.opacity;});}
   function setFade(root,alpha){root.visible=alpha>.001;root.traverse(o=>{if(o.userData.baseOpacity!==undefined)o.material.opacity=o.userData.baseOpacity*alpha;});}
-  prepareFade(facade);Object.values(stairways).forEach(prepareFade);doorPads.forEach(prepareFade);
-  function stairRoute(from,to){
-    const lower=Math.min(from,to),base=floorY(lower),half=FLOOR_GAP/2;
-    // Door and landing sit at z 7.5, clear of the floor-3 column at z 6.5, so both lanes fit through the doorway.
-    const points=[[-16,base,7.5],[-18.5,base,7.5]];
-    for(let i=1;i<=16;i++)points.push([-18.5,base+half*i/16,7-6*i/16]);
-    points.push([-21.5,base+half,1]);
-    for(let i=1;i<=16;i++)points.push([-21.5,base+half+half*i/16,1+6*i/16]);
-    points.push([-18.5,base+FLOOR_GAP,7.5],[-16,base+FLOOR_GAP,7.5]);
-    // People going up keep to one side of the flights and people coming down to the other, so they pass instead of colliding.
-    const lane=to>from?.35:-.35,ordered=to>from?points:points.reverse();
-    return ordered.map(([x,y,z],k)=>{
-      const [px,,pz]=ordered[Math.max(0,k-1)],[nx,,nz]=ordered[Math.min(ordered.length-1,k+1)],dx=nx-px,dz=nz-pz,d=Math.hypot(dx,dz)||1;
-      return new THREE.Vector3(x-dz/d*lane,y,z+dx/d*lane);
-    });
-  }
+  prepareFade(facade);prepareFade(liftShaft);doorPads.forEach(prepareFade);
   // attach() re-derives Euler angles from the matrix, which turns a yaw past 90 degrees into (PI, PI-yaw, PI). Everything
-  // else only turns rotation.y, so that would mirror the person's heading. Floors and stairs never rotate, so the yaw carries over.
+  // else only turns rotation.y, so that would mirror the person's heading. Floors and lifts never rotate, so the yaw carries over.
   function moveTo(parent,g){const yaw=new THREE.Euler().setFromQuaternion(g.getWorldQuaternion(new THREE.Quaternion()),'YXZ').y;parent.attach(g);g.rotation.set(0,yaw,0);}
-  function beginStairs(agent){
-    const next=agent.floor+Math.sign(agent.destination.floor-agent.floor);
-    floors[agent.floor].updateMatrixWorld(true);moveTo(travelRoot,agent.g);
-    agent.stairTrip={from:agent.floor,to:next,points:stairRoute(agent.floor,next)};
-    agent.state='stairs';agent.g.visible=true;
+  // A trip between floors: wait inside by the left door, walk into the cabin for that direction, ride, then step out.
+  // Phases: wait -> enter -> inside -> ride -> exit. The cabin itself is moved by stepLifts.
+  function beginLift(agent){
+    const from=agent.floor,to=agent.destination.floor,up=to>from,lift=lifts[up?0:1],k=lift.queue.length,base=floorY(from);
+    floors[from].updateMatrixWorld(true);moveTo(travelRoot,agent.g);
+    lift.queue.push(agent);
+    agent.liftTrip={from,to,lift,phase:'wait',points:[new THREE.Vector3(-15.3+(k%2)*.6,base,7.5+(up?-1:1)*(.35+Math.floor(k/2)%5*.55))]};
+    agent.state='lift';agent.g.visible=true;
+  }
+  function stepLifts(dt){
+    for(const lift of lifts){
+      if(lift.state==='idle'){
+        const first=lift.queue.find(a=>a.liftTrip.phase==='wait'&&!a.liftTrip.points.length);
+        if(!first)continue;
+        const {from,to}=first.liftTrip;
+        if(lift.floor!==from){lift.state='moving';lift.target=from;continue;}
+        lift.riders=lift.queue.filter(a=>a.liftTrip.phase==='wait'&&a.liftTrip.from===from&&a.liftTrip.to===to).slice(0,LIFT_SEATS);
+        lift.to=to;lift.state='boarding';lift.timer=0;
+        const base=floorY(from);
+        lift.riders.forEach((a,i)=>{
+          lift.queue.splice(lift.queue.indexOf(a),1);const t=a.liftTrip;t.phase='enter';
+          t.points=[new THREE.Vector3(-16,base,7.5),new THREE.Vector3(LIFT_HALL_X,base,lift.z),new THREE.Vector3(LIFT_X+.45-(i%2)*.9,base,lift.z-.55+Math.floor(i/2)*.55)];
+        });
+      }else if(lift.state==='boarding'){
+        lift.timer+=dt;
+        if(lift.riders.every(a=>a.liftTrip.phase==='inside')&&lift.timer>.8||lift.timer>15){lift.riders.forEach(a=>{a.liftTrip.phase='ride';a.liftTrip.points=[];});lift.state='riding';}
+      }else if(lift.state==='moving'||lift.state==='riding'){
+        const goal=floorY(lift.state==='moving'?lift.target:lift.to),d=goal-lift.y;
+        lift.y+=Math.sign(d)*Math.min(Math.abs(d),2.4*dt);lift.g.position.y=lift.y;
+        if(lift.state==='riding')for(const a of lift.riders)a.g.position.y=lift.y;
+        if(Math.abs(goal-lift.y)<1e-4){
+          if(lift.state==='moving'){lift.floor=lift.target;lift.state='idle';continue;}
+          lift.floor=lift.to;lift.state='unloading';const base=floorY(lift.to);
+          lift.riders.forEach((a,i)=>{const t=a.liftTrip;t.phase='exit';t.points=[new THREE.Vector3(LIFT_HALL_X,base,lift.z),new THREE.Vector3(-16,base,7.5),new THREE.Vector3(-15.3,base,7.5+((i%3)-1)*.45)];});
+        }
+      }else if(lift.state==='unloading'){
+        lift.riders=lift.riders.filter(a=>a.state==='lift'&&a.liftTrip?.lift===lift&&a.liftTrip.phase==='exit');
+        if(!lift.riders.length)lift.state='idle';
+      }
+    }
   }
   function visibleAgent(agent){
-    // The outside stairs only exist in the building view; a single floor shows just that floor.
-    return agent.state==='stairs'?stairsShown:floors[agent.floor].visible;
+    // Riders are only drawn in the building view, where the lift tower is; people waiting stand on their own floor.
+    if(agent.state==='lift')return agent.liftTrip.phase==='wait'?floors[agent.liftTrip.from].visible:liftShown;
+    return floors[agent.floor].visible;
   }
 
 
@@ -752,7 +761,7 @@
     const clearOfRoads=(x,z)=>Math.abs(z-24)>4.2&&Math.abs(x-34)>4.2;
     for(let x=-140;x<=140;x+=7)for(const z of [18.4,29.6])if(clearOfRoads(x,z)&&(x<0||x>16.5)&&Math.hypot(x,z)<142)trees.push([x,z,.9+rnd()*.3]);
     for(let z=-140;z<=140;z+=7)for(const x of [28.4,39.6])if(clearOfRoads(x,z)&&Math.hypot(x,z)<142)trees.push([x,z,.9+rnd()*.3]);
-    // Trees around the office lawn, clear of the building, the outside stairs and the driveway.
+    // Trees around the office lawn, clear of the building, the lift tower and the driveway.
     for(const [x,z,s] of [[-30,-20,1.4],[-34,-8,1.2],[-32,6,1.3],[-30,15,1.1],[-24,-22,1.2],[-12,-22,1.3],[0,-23,1.1],[12,-22,1.4],[22,-18,1.2],[23,-6,1.1],[22,6,1.3],[21,15,1],[-8,17,.8],[-14,17,.7],[-2,17.5,.7],[-26,17,.9]])trees.push([x,z,s]);
     for(let placed=0,tries=0;placed<130&&tries<900;tries++){
       const a=rnd()*Math.PI*2,dist=30+rnd()*112,x=Math.cos(a)*dist,z=Math.sin(a)*dist;
@@ -930,7 +939,7 @@
     const desk=desks[person.n];g.position.set(desk.x,0,desk.z);g.rotation.y=facing(desk);floors[3].add(g);
     const aisle=desk.route[0][0],stretchZ=desk.z-desk.f*.95;
     const stretchSpot={x:desk.x,z:stretchZ,f:desk.f,floor:3,route:[[aisle,P3],[aisle,stretchZ]],state:'stretch',local:true,label:'Berdiri'};
-    const agent={...person,index,g,rig,bubble,label,desk,stretchSpot,heading:facing(desk),floor:3,spot:desk,path:[],destination:desk,state:'work',stairTrip:null,activity:null,visitor:null,nextRoutine:rand(6,25)};
+    const agent={...person,index,g,rig,bubble,label,desk,stretchSpot,heading:facing(desk),floor:3,spot:desk,path:[],destination:desk,state:'work',liftTrip:null,activity:null,visitor:null,nextRoutine:rand(6,25)};
     label.onclick=()=>selectAgent(agent);g.traverse(o=>{o.userData.agent=agent;});return agent;
   }
 
@@ -996,7 +1005,7 @@
     const grid=base.slice();
     // People standing still are obstacles too; seated people are already covered by their chair.
     for(const o of agents){
-      if(o===self||o.floor!==level||o.state==='walk'||o.state==='stairs'||(SIT.has(o.state)&&!o.spot?.standing))continue;
+      if(o===self||o.floor!==level||o.state==='walk'||o.state==='lift'||(SIT.has(o.state)&&!o.spot?.standing))continue;
       const q=o.g.position;if(Math.hypot(q.x-to[0],q.z-to[1])<.5||Math.hypot(q.x-from[0],q.z-from[1])<.5)continue;
       const [ci,cj]=cellOf(q.x,q.z);
       for(let dj=-2;dj<=2;dj++)for(let di=-2;di<=2;di++)if(di*di+dj*dj<=5&&ci+di>=0&&cj+dj>=0&&ci+di<NAV.w&&cj+dj<NAV.h)grid[(cj+dj)*NAV.w+ci+di]||=1;
@@ -1128,11 +1137,11 @@
     log(`Waktu salat: ${names} ke musholla`,going[0].group);
     status(group.length>going.length?`Simulasi: ${going.length} orang ke musholla. Tersedia ${prayerSpots.length} sajadah.`:`Simulasi: ${names} menuju musholla.`);
   }
-  const STAIR_DOOR=[-16,7.5];
+  const LIFT_DOOR=[-16,7.5];
   function setPath(agent,spot) {
     clearActivity(agent);
     // A new command changes the destination, but never pulls a person off a flight mid-step.
-    if(agent.state==='stairs'){agent.destination=spot;return;}
+    if(agent.state==='lift'){agent.destination=spot;return;}
     if(agent.spot===spot){agent.destination=spot;agent.path=[];arrive(agent);return;}
     const p=agent.g.position,old=agent.spot,P=passage(agent.floor);
     agent.destination=spot;agent.state='walk';agent.spot=null;
@@ -1141,11 +1150,11 @@
     // Walk around furniture and people on the walking grid; the hand-written routes remain as a fallback.
     // Leaving a seat steps out the way the seat is entered, so neighbours at a table do not meet in the same gap.
     const leaving=old&&Math.hypot(p.x-old.x,p.z-old.z)<.3?old:null;
-    const planned=agent.floor!==spot.floor?navPath(agent.floor,[p.x,p.z],STAIR_DOOR,agent,null,leaving):navPath(agent.floor,[p.x,p.z],[spot.x,spot.z],agent,spot,leaving);
+    const planned=agent.floor!==spot.floor?navPath(agent.floor,[p.x,p.z],LIFT_DOOR,agent,null,leaving):navPath(agent.floor,[p.x,p.z],[spot.x,spot.z],agent,spot,leaving);
     if(planned){agent.path=planned;return;}
     // Every spot has a route from the floor's central passage; leaving reverses it.
     const departure=old?[...old.route].reverse():[[p.x,P]];
-    agent.path=agent.floor!==spot.floor?[...departure,[-14,P],[-14,7.5],STAIR_DOOR]:[...departure,...spot.route,[spot.x,spot.z]];
+    agent.path=agent.floor!==spot.floor?[...departure,[-14,P],[-14,7.5],LIFT_DOOR]:[...departure,...spot.route,[spot.x,spot.z]];
   }
   function arrive(agent) {
     const spot=agent.destination;agent.spot=spot;agent.state=spot.state||(spot.floor===3?'work':'break');
@@ -1280,7 +1289,7 @@
     if(talking&&state!=='call'&&!walking)arm[1]=[(sitting?-.7:-.5)+Math.sin(t*3+i)*.25,.25,-1.1+Math.sin(t*4.3)*.2];
     if(state==='call')arm[1]=[-.3,.38,-2.55];
     if(state==='water')arm[1]=[-1.1,.18,-.3];
-    if(agent.celebrateUntil>simTime&&!walking&&state!=='stairs'&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&window.officeLife.preferences.celebrate){arm=[[-2.4,.35,-.5],[-2.4,.35,-.5]];bodyY+=Math.abs(Math.sin(t*8))*.06;}
+    if(agent.celebrateUntil>simTime&&!walking&&state!=='lift'&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&window.officeLife.preferences.celebrate){arm=[[-2.4,.35,-.5],[-2.4,.35,-.5]];bodyY+=Math.abs(Math.sin(t*8))*.06;}
     const sway=walking?Math.sin(t*7.2+i*1.7)*.035:Math.sin(t*1.2+i)*.008;
     blendPose(agent.rig,leg,arm,bodyY+(walking?0:Math.sin(t*1.5+i)*.008),bodyZ,lean,dt,sway);
     cup.visible=state==='drink'||(!walking&&agent.spot?.roofPose==='coffee');phone.visible=state==='call';agent.rig.wateringCan.visible=state==='water';
@@ -1301,7 +1310,7 @@
     const p=agent.g.position,[tx,tz]=agent.path[0],len=Math.hypot(tx-p.x,tz-p.z);if(len<.05)return false;
     const fx=(tx-p.x)/len,fz=(tz-p.z)/len;
     for(const o of agents){
-      if(o===agent||o.floor!==agent.floor||o.state==='stairs'||(SIT.has(o.state)&&!o.spot?.standing&&o.state!=='walk'))continue;
+      if(o===agent||o.floor!==agent.floor||o.state==='lift'||(SIT.has(o.state)&&!o.spot?.standing&&o.state!=='walk'))continue;
       const q=o.g.position,ox=q.x-p.x,oz=q.z-p.z,along=ox*fx+oz*fz,side=Math.abs(ox*fz-oz*fx);
       if(along<=.05||along>.95||side>.55)continue;
       let dot=0,moving=o.state==='walk'&&o.path.length;
@@ -1324,12 +1333,10 @@
   }
   function updateAgent(agent,dt) {
     const before=agent.g.getWorldPosition(new THREE.Vector3());
-    if(agent.state==='stairs'){
-      const trip=agent.stairTrip;let remaining=dt*3.1;
-      // Queue behind whoever is just ahead on the same flight, going the same way.
-      const ahead=agents.find(o=>o!==agent&&o.state==='stairs'&&o.stairTrip&&o.stairTrip.from===trip.from&&o.stairTrip.to===trip.to&&
-        o.stairTrip.points.length<trip.points.length&&o.g.position.distanceTo(agent.g.position)<.85);
-      if(ahead&&(agent.queued=(agent.queued||0)+dt)<3)remaining=0;else if(!ahead)agent.queued=0;
+    if(agent.state==='lift'){
+      const trip=agent.liftTrip;let remaining=trip.phase==='ride'?0:dt*3.1;
+      // Someone still waiting whose plans changed back to this floor leaves the queue.
+      if(trip.phase==='wait'&&agent.destination.floor===trip.from){const q=trip.lift.queue;if(q.includes(agent))q.splice(q.indexOf(agent),1);trip.phase='exit';trip.to=trip.from;trip.points=[];}
       if(trip.points.length){const d=trip.points[0].clone().sub(agent.g.position);if(Math.hypot(d.x,d.z)>.05){agent.heading=Math.atan2(d.x,d.z);if(Math.abs(wrap(agent.heading-agent.g.rotation.y))>1.3)remaining=0;}}
       while(trip.points.length&&remaining>0){
         const target=trip.points[0],delta=target.clone().sub(agent.g.position),distance=delta.length();
@@ -1337,9 +1344,10 @@
         if(distance<=remaining){agent.g.position.copy(target);remaining-=distance;trip.points.shift();}
         else{agent.g.position.addScaledVector(delta,remaining/distance);remaining=0;}
       }
-      if(!trip.points.length){
-        agent.floor=trip.to;moveTo(floors[agent.floor],agent.g);agent.stairTrip=null;
-        if(agent.floor!==agent.destination.floor)beginStairs(agent);
+      if(!trip.points.length&&trip.phase==='enter'){trip.phase='inside';agent.heading=Math.PI/2;}
+      if(!trip.points.length&&trip.phase==='exit'){
+        agent.floor=trip.to;moveTo(floors[agent.floor],agent.g);agent.liftTrip=null;
+        if(agent.floor!==agent.destination.floor)beginLift(agent);
         else{const s=agent.destination;agent.path=navPath(agent.floor,[agent.g.position.x,agent.g.position.z],[s.x,s.z],agent,s)||[[-14,7.5],[-14,passage(agent.floor)],...s.route,[s.x,s.z]];agent.state='walk';}
       }
     }
@@ -1358,7 +1366,7 @@
       if(d<=distance){p.x=x;p.z=z;distance-=d;agent.path.shift();}
       else{p.x+=dx/d*distance;p.z+=dz/d*distance;distance=0;}
       if(!agent.path.length){
-        if(agent.floor!==agent.destination.floor)beginStairs(agent);
+        if(agent.floor!==agent.destination.floor)beginLift(agent);
         else arrive(agent);
       }
     }
@@ -1366,7 +1374,7 @@
     // spot is a standing pose, so nobody appears to walk in place or backwards.
     const moved=agent.g.getWorldPosition(new THREE.Vector3()).distanceTo(before);
     agent.stepping=moved>dt*.4?.25:Math.max(0,(agent.stepping||0)-dt);
-    const state=agent.state,travelling=state==='walk'||state==='stairs',walking=travelling&&agent.stepping>0,sitting=SIT.has(state)&&!agent.spot?.standing,talking=speaking(agent);
+    const state=agent.state,travelling=state==='walk'||state==='lift',walking=travelling&&agent.stepping>0,sitting=SIT.has(state)&&!agent.spot?.standing,talking=speaking(agent);
     const partner=companions(agent).sort((a,b)=>agent.g.position.distanceTo(a.g.position)-agent.g.position.distanceTo(b.g.position))[0];
     if(!travelling&&agent.spot){
       const p=agent.g.position,q=partner?.g.position;
@@ -1439,7 +1447,7 @@
   }
   function agentStatus(agent) {
     const destination=agent.destination,others=companions(agent).map(o=>o.initials).join(' & ');
-    if(agent.state==='stairs')return `Di tangga menuju lantai ${destination.floor}`;
+    if(agent.state==='lift')return agent.liftTrip.phase==='wait'?`Menunggu lift ke lantai ${agent.liftTrip.to}`:`Naik lift ke lantai ${agent.liftTrip.to}`;
     if(agent.state==='walk'){
       if(destination.label)return destination.label;
       if(destination===agent.desk&&agent.floor===3)return 'Kembali ke meja';
@@ -1521,7 +1529,7 @@
     const view=cameraFor(activeFloor);cam.target.copy(view.target);cam.theta=view.theta;cam.phi=view.phi;cam.radius=view.radius;cam.spin=0;
   }
   // Moving between one floor and the whole building glides the camera, while the other floors slide in to assemble
-  // the building (zooming out) or slide away (zooming in). Glass, stairs and the city settle at the end.
+  // the building (zooming out) or slide away (zooming in). Glass, the lift tower and the city settle at the end.
   let transition=null,viewReady=false;
   const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
   function startTransition(from,to){
@@ -1537,26 +1545,25 @@
     const spread=tr.to===0?1-e:e;
     const offset=level=>Math.sign(level-tr.focus)*spread*28;
     for(const [key,group] of Object.entries(floors)){const level=Number(key);group.position.y=floorY(level)+offset(level);}
-    // Glass and stairs travel with their floor and fade in once the building has nearly assembled (or fade out first
+    // Glass travels with its floor; glass and the lift tower fade in once the building has nearly assembled (or fade out first
     // when zooming into a floor); the city fades in the first half of zooming out and away at the end of zooming in.
     const smooth=(a,b,x)=>{const k=Math.max(0,Math.min(1,(x-a)/(b-a)));return k*k*(3-2*k);};
     const building=tr.to===0?smooth(.45,1,t):1-smooth(0,.4,t),city=tr.to===0?smooth(0,.5,t):1-smooth(.5,1,t);
     for(const [key,lg] of Object.entries(facadeLevels))lg.position.y=offset(Number(key));
-    for(const [key,bridge] of Object.entries(stairways)){bridge.position.y=floorY(Number(key))+offset(Number(key));setFade(bridge,building);}
+    setFade(liftShaft,building);
     setFade(facade,building);doorPads.forEach(pad=>setFade(pad,building));setFade(skyline,city);
     if(t<1)return;
     transition=null;
     for(const lg of Object.values(facadeLevels))lg.position.y=0;
-    for(const [key,bridge] of Object.entries(stairways))bridge.position.y=floorY(Number(key));
-    for(const root of [facade,skyline,...Object.values(stairways),...doorPads])setFade(root,1);
+    for(const root of [facade,skyline,liftShaft,...doorPads])setFade(root,1);
     if(tr.to===0){showLevels([1,2,3,4],true);facade.visible=skyline.visible=true;}
     else{showLevels([tr.to],false);skyline.visible=facade.visible=false;}
   }
-  let stairsShown=false,follow=null;
-  // Which floors and outside stairs are drawn. The character camera may need two floors plus the stairs between them.
-  function showLevels(levels,stairs){
+  let liftShown=false,follow=null;
+  // Which floors and the lift tower are drawn. The character camera may need two floors plus the lift between them.
+  function showLevels(levels,lift){
     for(const [key,group] of Object.entries(floors)){group.visible=levels.includes(Number(key));group.position.y=floorY(Number(key));}
-    stairsShown=stairs;for(const outside of [...Object.values(stairways),...doorPads])outside.visible=stairs;
+    liftShown=lift;for(const outside of [liftShaft,...doorPads])outside.visible=lift;
   }
   function setFloor(level,clearSelection=true,keepCamera=false) {
     stopTour();
@@ -1588,10 +1595,10 @@
   }
   const followEye=new THREE.Vector3(),followLook=new THREE.Vector3(),followWanted=new THREE.Vector3();
   function followCamera(realDt){
-    const a=follow.agent,trip=a.stairTrip;
-    const levels=a.state==='stairs'&&trip?[trip.from,trip.to]:[a.floor];
-    if(a.state!=='stairs'&&activeFloor!==a.floor)setFloor(a.floor,false,true);
-    showLevels(levels,a.state==='stairs');
+    const a=follow.agent,trip=a.liftTrip;
+    const levels=a.state==='lift'&&trip?[trip.from,trip.to]:[a.floor];
+    if(a.state!=='lift'&&activeFloor!==a.floor)setFloor(a.floor,false,true);
+    showLevels(levels,a.state==='lift');
     a.rig.head.getWorldPosition(followEye);
     const heading=a.g.rotation.y+follow.yaw,pitch=follow.pitch,dir=new THREE.Vector3(Math.sin(heading)*Math.cos(pitch),Math.sin(pitch),Math.cos(heading)*Math.cos(pitch));
     if(follow.mode==='eyes'){
@@ -1834,12 +1841,13 @@
     for(let step=0;step<simSteps;step++){
       simTime+=dt;
       for(const a of agents){updateAgent(a,dt);if(dt>0)live(a);}
+      stepLifts(dt);
       stepCat(dt);stepShop(dt);
     }
     for(const a of agents)syncTaskDisplay(a);
     const minute=Math.floor(Date.now()/60000);if(lastMoodChoice!==window.officeLife.preferences.mood||lastMoodMinute!==minute){applyOfficeMood();lastMoodChoice=window.officeLife.preferences.mood;lastMoodMinute=minute;}
     if(skyline.visible)animateSky(dt*simSteps);
-    for(const d of doors){const near=agents.some(a=>a.floor===d.floor&&a.state!=='stairs'&&a.g.position.distanceTo(d.center)<1.6);d.open+=((near?1:0)-d.open)*Math.min(1,dt*simSteps*6);d.pivot.rotation.y=d.base+d.open*1.45;}
+    for(const d of doors){const near=agents.some(a=>a.floor===d.floor&&a.state!=='lift'&&a.g.position.distanceTo(d.center)<1.6);d.open+=((near?1:0)-d.open)*Math.min(1,dt*simSteps*6);d.pivot.rotation.y=d.base+d.open*1.45;}
     if(follow){scene.updateMatrixWorld(true);followCamera(realDt);}
     scene.updateMatrixWorld(true);
     const occupied=[];
@@ -1852,17 +1860,17 @@
       const compact=innerWidth<1000&&cam.radius>80;
       const representative=agents.find(p=>p.group===a.group)===a;
       const clearLabel=activeFloor!==0||a===selected||!occupied.some(p=>Math.abs(x-p.x)<(width+p.width)/2+5&&Math.abs(labelY-p.y)<34);
-      const show=clearLabel&&(activeFloor!==0||a.state==='stairs'||a===selected)&&(!compact||representative||a===selected)&&visibleAgent(a)&&a.g.visible&&projected.z<1&&x>width/2&&x<innerWidth-width/2&&labelY>(innerWidth<=1000?230:95)&&y<innerHeight-130;
+      const show=clearLabel&&(activeFloor!==0||a.state==='lift'||a===selected)&&(!compact||representative||a===selected)&&visibleAgent(a)&&a.g.visible&&projected.z<1&&x>width/2&&x<innerWidth-width/2&&labelY>(innerWidth<=1000?230:95)&&y<innerHeight-130;
       a.label.hidden=!show||(follow?.mode==='eyes'&&follow.agent===a);
       syncBubble(a);
       if(show){a.label.style.transform=`translate(${x}px,${labelY}px) translate(-50%,-100%)`;a.label.style.setProperty('--stem',`${y-labelY+6}px`);occupied.push({x,y:labelY,width});}
     }
     if(selected){
       selected.g.getWorldPosition(world);ring.position.set(world.x,world.y+.07,world.z);ring.visible=!follow&&selected.g.visible&&visibleAgent(selected);
-      $('iLocation').textContent=selected.state==='stairs'?`Tangga kiri · ${selected.stairTrip.from} ke ${selected.stairTrip.to}`:`Lantai ${selected.floor} · ${FLOOR[selected.floor].name}`;$('iActivity').textContent=agentStatus(selected);
+      $('iLocation').textContent=selected.state==='lift'?`Lift · lantai ${selected.liftTrip.from} ke ${selected.liftTrip.to}`:`Lantai ${selected.floor} · ${FLOOR[selected.floor].name}`;$('iActivity').textContent=agentStatus(selected);
     }
     for(let level=1;level<=4;level++){
-      const count=agents.filter(a=>a.floor===level&&a.state!=='stairs').length;
+      const count=agents.filter(a=>a.floor===level&&a.state!=='lift').length;
       const badge=document.querySelector(`[data-floor="${level}"] .floor-count`);
       if(badge&&badge.textContent!==String(count)){badge.textContent=String(count);badge.setAttribute('aria-label',`${count} anggota tim di lantai ini`);}
     }
