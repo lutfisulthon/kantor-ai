@@ -135,7 +135,7 @@ body.ui{--paper:#eef2f8;--sheet:#fff;--ink:#0f1f3d;--ink-2:#5a6780;--line:#dfe6f
 .ui .panel,.ui #floorCaption,.ui #floors,.ui #header>#brand,.ui .header-card{background:#fff;border:1px solid rgba(30,34,48,.06);border-radius:16px;box-shadow:0 10px 28px rgba(10,42,92,.12)}
 .ui #header{top:16px;left:24px;right:24px;align-items:center;gap:10px}
 .ui #brand{display:flex;align-items:center;gap:14px;padding:12px 20px 12px 12px;margin-right:auto}
-.ui .brand-mark{display:grid;place-items:center;width:52px;height:52px;border-radius:12px;background:linear-gradient(145deg,#1565c0,var(--navy));color:#fff}
+.ui .brand-mark{display:grid;place-items:center;width:52px;height:52px;border-radius:12px;background:#fff;border:1px solid var(--line);color:#fff}
 .ui #brand strong{font-size:24px}
 .ui .brand-meta{font:500 13px var(--sans)!important;margin-top:4px!important}
 .ui .brand-tagline{display:block;border-left:1px solid var(--line);padding-left:16px;margin-left:8px;font-size:13px;line-height:1.4;color:var(--ink-2)}
@@ -214,7 +214,7 @@ body{--i-list:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' 
 @media(max-width:1250px){.ui .brand-tagline{display:none}}
 @media(max-width:1000px){
  .ui #header{padding:0;top:8px;left:8px;right:8px;gap:6px}
- .ui #brand{flex:1;min-width:0;padding:6px 10px 6px 6px;gap:10px}.ui .brand-mark{width:34px;height:34px;border-radius:9px}.ui .brand-mark svg{width:20px;height:20px}
+ .ui #brand{flex:1;min-width:0;padding:6px 10px 6px 6px;gap:10px}.ui .brand-mark{width:34px;height:34px;border-radius:9px}.ui .brand-mark img{width:28px;height:28px}
  .ui #brand strong{font-size:19px}.ui .brand-meta{font-size:11px!important;margin-top:2px!important}
  .ui .header-card{display:contents}
  .ui .team-picker{background:#fff;border-radius:12px;padding:6px 8px;box-shadow:0 10px 28px rgba(60,48,30,.12)}.ui .team-picker select{width:100%}
@@ -256,10 +256,14 @@ body{--i-list:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' 
 .decisions::before{content:'?';display:inline-grid;place-items:center;width:18px;height:18px;margin-right:8px;border-radius:50%;background:#e0a23a;color:#fff;font-size:12px}
 .decisions:hover{background:#ffe7bb}
 .ui .decisions{width:calc(100% - 36px);margin:0 18px 12px}
-/* Komdigi identity strip: a red-white band with a gold rule tops the brand card, like the Merah Putih ribbon on ministry signage. */
+/* Komdigi identity strip: a red band with a gold rule tops the brand card, like the ribbon on ministry signage. */
 .ui #header>#brand{position:relative;overflow:hidden;padding-top:16px}
-.ui #header>#brand::before{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:linear-gradient(90deg,var(--red) 0 50%,#fff 50% 100%);box-shadow:inset 0 -1px 0 var(--gold)}
-.ui .brand-mark svg{width:30px;height:30px}
+.ui #header>#brand::before{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:linear-gradient(var(--red) 0 60%,var(--gold) 60% 100%)}
+.ui .brand-mark img{width:40px;height:40px;display:block}
+@media(max-width:1000px){.ui .brand-mark img{width:28px;height:28px}}
 .ui #floorCaption{border-top:4px solid var(--navy)}
 .ui .tb-head{color:var(--navy);font-weight:600}
 @media(max-width:1000px){.ui #header>#brand{padding-top:6px}.ui #header>#brand::before{height:3px}}
+/* The office name is long, so it steps down in size before the header runs out of room. */
+@media(max-width:1250px){.ui #brand strong{font-size:20px}}
+@media(max-width:1000px){.ui #brand strong{font-size:14px;line-height:1.15}.ui #brand .brand-meta{font-size:10px!important}}
