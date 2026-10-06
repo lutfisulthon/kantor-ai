@@ -4,7 +4,7 @@ dialog#taskDialog{position:fixed;inset:0;margin:auto;width:min(960px,calc(100% -
 .task-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.task-header p,.task-note,#taskSummary{color:var(--ink-2);margin:6px 0 16px}.task-note{font-size:13px}
 .task-layout{display:grid;grid-template-columns:minmax(220px, .8fr) minmax(0,1.4fr);gap:32px;margin-top:20px;border-top:1px solid var(--line);padding-top:20px}
 #taskDialog label{display:block;margin:12px 0 6px;font-weight:600}#taskDialog label span{font-weight:400;color:var(--ink-2)}
-#taskDialog input,#taskDialog select,#taskDialog textarea{display:block;width:100%;min-width:0;background:#fffdf8;color:var(--ink);border:1px solid var(--line);border-radius:2px;padding:10px;font:inherit;min-height:44px}#taskDialog textarea{resize:vertical}#taskDialog input::placeholder,#taskDialog textarea::placeholder{color:#6b6459}
+#taskDialog input,#taskDialog select,#taskDialog textarea{display:block;width:100%;min-width:0;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:2px;padding:10px;font:inherit;min-height:44px}#taskDialog textarea{resize:vertical}#taskDialog input::placeholder,#taskDialog textarea::placeholder{color:#6b6459}
 #taskDialog button{min-height:44px;padding:9px 13px;background:var(--sheet);color:var(--ink);border:1px solid var(--line);border-radius:2px;font:inherit;font-weight:500;cursor:pointer}#taskDialog button:hover{background:var(--hover)}#taskDialog button:active{background:#d9d2c3}
 #taskDialog .task-primary{background:var(--accent);border-color:var(--accent);color:#fff}#taskDialog .task-primary:hover{background:#0e4a96}#taskForm>.task-primary{width:100%;margin:16px 0}
 :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
