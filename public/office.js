@@ -34,7 +34,7 @@
     1: {name:'Barber & parkir', title:'Tempat setiap hari dimulai.', description:'Barber di satu sisi, parkiran di sisi lain.'},
     2: {name:'Dapur & ruang makan', title:'Bertemu di meja makan.', description:'Dapur bersama dan meja panjang tempat seluruh tim makan bersama.'},
     3: {name:'Ruang kerja', title:'Ruang untuk semua.', description:'Lantai terbuka dengan empat kelompok meja, ruang rapat kaca, phone booth, pantry, dua lounge, dan musholla.'},
-    4: {name:'Rooftop', title:'Rehat sejenak di atas.', description:'Teras taman dengan lounge pergola, ping pong, bean bag, ayunan, catur, matras yoga, biliar, dan coffee bar.'},
+    4: {name:'Rooftop', title:'Rehat sejenak di atas.', description:'Teras taman dengan lapangan upacara bendera, lounge pergola, ping pong, bean bag, ayunan, catur, matras yoga, biliar, dan coffee bar.'},
   };
   const GROUPS = {
     leadership: {name:'Pimpinan', x:-5.5, z:-3.5, color:0x0a2a5c},
@@ -501,7 +501,25 @@
   }
   for(const [x,z] of [[-12,10],[11,10],[-12,-10],[12,-10]])lantern(x,z);
   plant(1,-10.5,1.3);plant(13,-10.5,1.25);restroom(14.55,10.6,2.6,2.5,'-x');
-  textPlane('TAMAN ROOFTOP',3,9,8);
+  textPlane('TAMAN ROOFTOP',-6.5,9.7,6);
+  // Flag ceremony court in the front middle: a paved square with painted ranks facing the Merah Putih.
+  {
+    const FX=4.8,FZ=5.3,FW=8.4,FD=9.4,LINE=0xfbf8f2,top=.09;
+    box(FW,.05,FD,0xbfc4c8,FX,.04,FZ);
+    for(const [w,d,x,z] of [[FW,.08,FX,FZ-FD/2+.1],[FW,.08,FX,FZ+FD/2-.1],[.08,FD,FX-FW/2+.1,FZ],[.08,FD,FX+FW/2-.1,FZ]])box(w,.006,d,LINE,x,top,z);
+    // Three ranks of five standing marks, facing the flag.
+    for(const z of [5.6,7,8.4])for(let i=0;i<5;i++)box(.6,.006,.14,LINE,2.4+i*1.2,top,z+.3);
+    // Flagpole on a stepped plinth, with the flag raised to the top.
+    const PZ=1.9;
+    box(1.8,.14,1.8,0xe2ded6,FX,top,PZ);box(1.2,.14,1.2,0xeeeae3,FX,top+.14,PZ);
+    cylinder(.045,.065,5.4,0xe9ebee,FX,top+.28,PZ);
+    mesh(new THREE.SphereGeometry(.1,14,10),GOLD,FX,top+5.75,PZ,root,false);
+    box(.012,5.2,.012,0x8a8479,FX+.07,top+.4,PZ+.02);
+    box(1.8,.6,.025,MERAH,FX+.95,top+4.95,PZ);box(1.8,.6,.025,0xfafafa,FX+.95,top+4.35,PZ);
+    // Ceremony leader's platform beside the pole.
+    box(1.5,.28,1.1,0xe2ded6,FX+2.6,top,PZ+.4);box(.5,.85,.32,NAVY,FX+2.6,top+.28,PZ+.1);
+    const sign=textPlane('LAPANGAN UPACARA',FX,FZ+FD/2-.7,5);sign.position.y=top+.01;
+  }
   // Rooftop door from the stair core: a white frame with two glass leaves, always open and folded back inside.
   const DOOR_FRAME=0xf6f4ef;
   box(.22,.85,.8,CARD,-16,0,5.9);
@@ -520,14 +538,15 @@
   roofSpot(4.1,-5.5,Math.PI/2,'bermain ping pong',{standing:true,roofPose:'pingpong'});
   roofSpot(7.9,-5.5,-Math.PI/2,'bermain ping pong',{standing:true,roofPose:'pingpong'});
   textPlane('PING PONG',6,-3.6,3);
-  // Bean bags on a round lawn under a striped parasol.
-  cylinder(2.3,2.3,.03,0x9fc17a,4.5,.05,3.2);
-  cylinder(.42,.42,.05,BALSA,4.5,.34,3.2);cylinder(.05,.08,.34,DARK,4.5,0,3.2);
+  // Bean bags on a round lawn under a striped parasol, between the pergola and the billiard table.
+  const BX=-6,BZ=1.3;
+  cylinder(2.3,2.3,.03,0x9fc17a,BX,.05,BZ);
+  cylinder(.42,.42,.05,BALSA,BX,.34,BZ);cylinder(.05,.08,.34,DARK,BX,0,BZ);
   // A tall, narrow cafe parasol, so people on the bean bags stay visible from above.
-  cylinder(.035,.035,2.9,CARD,4.5,.39,3.2);
-  cylinder(.02,1.05,.4,0xe8634a,4.5,2.95,3.2);cylinder(.02,.6,.22,0xfbf6ee,4.5,3.12,3.2);
+  cylinder(.035,.035,2.9,CARD,BX,.39,BZ);
+  cylinder(.02,1.05,.4,0xe8634a,BX,2.95,BZ);cylinder(.02,.6,.22,0xfbf6ee,BX,3.12,BZ);
   [[0xe8866c,0],[0xe0b04f,Math.PI/2],[0x5f9a94,Math.PI],[0xa594c6,-Math.PI/2]].forEach(([color,a])=>{
-    const x=4.5+Math.sin(a)*1.35,z=3.2+Math.cos(a)*1.35;
+    const x=BX+Math.sin(a)*1.35,z=BZ+Math.cos(a)*1.35;
     oval(1.05,.55,1.05,color,x,.28,z);oval(.9,.7,.4,color,x+Math.sin(a)*.38,.55,z+Math.cos(a)*.38);
     roofSpot(x,z,a+Math.PI,'bersantai di bean bag',{roofPose:'beanbag'});
   });
