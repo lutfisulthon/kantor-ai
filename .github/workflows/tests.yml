@@ -1,0 +1,60 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: public/ loads no scripts from the network
+        run: |
+          if grep -rnE '<script[^>]+src="(https?:)?//' public/; then
+            echo "Serve these files from public/ instead of a CDN."; exit 1
+          fi
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        test: [server, decisions, worker-reliability, office-life, office-studio, building-view, member-commands, soft-avatar, avatar-stairs, office]
+    env:
+      # Dry run only: the tests never call the paid API.
+      ANTHROPIC_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Several tests save screenshots under the macOS path /private/tmp.
+      - run: sudo mkdir -p /private/tmp && sudo chmod 1777 /private/tmp
+      # Some browser tests expect a server already running on port 4173.
+      - name: Start server on 4173
+        run: |
+          mkdir -p "$RUNNER_TEMP/data"
+          PORT=4173 DATA_DIR="$RUNNER_TEMP/data" ENV_FILE=/nonexistent nohup node server/server.js > "$RUNNER_TEMP/server.log" 2>&1 &
+          for i in $(seq 30); do curl -sf http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
+          cat "$RUNNER_TEMP/server.log"; exit 1
+      - run: node tests/${{ matrix.test }}.cjs
+      - name: Server log
+        if: failure()
+        run: cat "$RUNNER_TEMP/server.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots-${{ matrix.test }}
+          path: |
+            /private/tmp/kantor-*.png
+            /private/tmp/soft-*.png
+          if-no-files-found: ignore

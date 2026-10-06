@@ -40,7 +40,7 @@ Jalankan dari direktori proyek:
 python3 -m http.server 4173 --bind 127.0.0.1 --directory public
 ```
 
-Buka http://127.0.0.1:4173. Internet diperlukan untuk memuat Three.js dari CDN dan font Archivo serta IBM Plex Mono dari Google Fonts.
+Buka http://127.0.0.1:4173. Three.js r128 disajikan dari `public/vendor/three/`, jadi kantor tetap berjalan tanpa internet. Internet hanya dipakai untuk font Archivo serta IBM Plex Mono dari Google Fonts; tanpa itu browser memakai font cadangan.
 
 ## Mengelola tugas
 
@@ -94,8 +94,12 @@ Model bawaan adalah `claude-sonnet-5-5`; ganti dengan `ANTHROPIC_MODEL` di `.env
 - `public/music.js`: komposisi instrumental, kontrol putar/mati, dan volume.
 - `server/server.js`: server lokal (file statis + API tugas) dan pekerja agen AI.
 - `server/agents.js`: anggota yang tersambung ke agen AI beserta instruksinya.
+- `public/vendor/three/`: Three.js r128 (`three.min.js` dari paket npm `three@0.128.0`, sama dengan berkas CDN sebelumnya) beserta lisensinya.
+- `.github/workflows/tests.yml`: CI yang menjalankan semua `tests/*.cjs` dalam dry-run tanpa `ANTHROPIC_API_KEY`.
 
 ## Pemeriksaan browser
+
+`npm ci` lalu `npx playwright install chromium` memasang Playwright yang sama dengan CI. Tes browser yang tidak menyalakan server sendiri memerlukan server di port 4173 (`PORT=4173 npm start`). Beberapa tes menyimpan tangkapan layar di `/private/tmp`; di Linux buat direktori itu lebih dulu.
 
 `tests/avatar-stairs.cjs` memeriksa varian avatar, inisial, kompatibilitas tugas, posisi 3D saat naik/turun tangga, jeda, perubahan tujuan, kamera yang tetap, musik, volume tersimpan, serta layout 375/768/1440px. Jalankan dengan `node tests/avatar-stairs.cjs`; konfigurasi Playwright sama seperti tes di bawah. `OFFICE_URL` dapat digunakan untuk alamat server selain port 4173.
 
