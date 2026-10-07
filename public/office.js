@@ -606,7 +606,7 @@
   for(const z of [4.5,6.7,8.3,10.5])for(const x of [-19.95,-17.85])box(.1,LIFT_TOP,.1,0xf6f4ef,x,0,z,liftShaft);
   box(.04,LIFT_TOP,6.1,'roofglass',-20,0,7.5,liftShaft);
   for(const z of [4.45,10.55])box(2.1,LIFT_TOP,.04,'roofglass',-18.9,0,z,liftShaft);
-  box(2.4,.5,6.4,NAVY,-18.9,LIFT_TOP,7.5,liftShaft);box(2.42,.06,6.42,GOLD,-18.9,LIFT_TOP+.5,7.5,liftShaft);
+  box(2.4,.56,6.4,0xd8c59f,-18.9,LIFT_TOP,7.5,liftShaft);
   const lifts=[5.6,9.4].map((z,i)=>{
     const g=new THREE.Group();g.position.set(LIFT_X,floorY(3),z);liftShaft.add(g);
     box(2,.12,2,0xd9d4ca,0,-.12,0,g);box(.05,2.3,2,'glass',-.98,0,0,g);
@@ -618,29 +618,42 @@
   const facade=new THREE.Group();scene.add(facade);facade.visible=false;
   // Each storey's glass sits in its own group so it can travel and fade with that floor during camera transitions.
   const facadeLevels={};
-  function glazing(w,h,d,x,y,z,parent){box(w,h,d,'roofglass',x,y,z,parent);}
-  // White frame, as in the building reference: slab edges and mullions are white, the glass stays clear.
-  const FRAME=0xf6f4ef;
+  // As on the real building: blue reflective glass on a tight silver grid, wrapped by cream bands with rounded corners.
+  const facadeGlass=new THREE.MeshToonMaterial({color:linear(0x4f86c2),gradientMap:toneSteps,transparent:true,opacity:.36,depthWrite:false});
+  function glazing(w,h,d,x,y,z,parent){const m=box(w,h,d,'roofglass',x,y,z,parent);m.material=facadeGlass;return m;}
+  const FRAME=0xf6f4ef,MULLION=0xc3c9d1,CREAM=0xd8c59f;
+  // A flat ring with rounded outer and inner corners, extruded upwards by h: the cream band around a storey.
+  function roundedBand(w,d,r,inset,h,color,y,parent){
+    const rect=(W,D,R)=>{const s=new THREE.Path(),x=W/2,z=D/2;s.moveTo(-x+R,-z);s.lineTo(x-R,-z);s.quadraticCurveTo(x,-z,x,-z+R);s.lineTo(x,z-R);s.quadraticCurveTo(x,z,x-R,z);s.lineTo(-x+R,z);s.quadraticCurveTo(-x,z,-x,z-R);s.lineTo(-x,-z+R);s.quadraticCurveTo(-x,-z,-x+R,-z);return s;};
+    const shape=new THREE.Shape(rect(w,d,r).getPoints(12));shape.holes.push(rect(w-inset*2,d-inset*2,Math.max(.05,r-inset)));
+    const geometry=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false,curveSegments:12});geometry.rotateX(-Math.PI/2);
+    return mesh(geometry,color,0,y,0,parent);
+  }
   for(let level=1;level<=4;level++){
     const y=floorY(level),h=FLOOR_GAP-.48,lg=new THREE.Group();facade.add(lg);facadeLevels[level]=lg;
-    // A navy slab edge with a thin gold rule wraps each storey, the ministry's colours on the facade; it knows its level so a click on it enters that floor.
-    const edge=box(33.4,.56,25.4,NAVY,0,y-.54,0,lg);box(33.5,.06,25.5,GOLD,0,y-.06,0,lg);edge.userData.level=level;
+    // A thick cream band with rounded corners wraps each storey; it knows its level so a click on it enters that floor.
+    const edge=roundedBand(33.7,25.7,1.3,.75,.62,CREAM,y-.58,lg);edge.userData.level=level;
     if(level===4){
       // Rooftop: a glass balustrade with a white handrail on the parapet.
       // The left side stops at the lift door (z 5.5 to 8.5), where the rooftop door stands open.
       for(const [w,d,x,z] of [[33,.05,0,12.55],[33,.05,0,-12.55],[.05,25,16.55,0],[.05,18,-16.55,-3.5],[.05,4,-16.55,10.5]]){
-        glazing(w,1.15,d,x,y,z,lg);box(Math.max(w,.12),.08,Math.max(d,.12),FRAME,x,y+1.15,z,lg);
+        glazing(w,1.15,d,x,y,z,lg);box(Math.max(w,.12),.08,Math.max(d,.12),CREAM,x,y+1.15,z,lg);
       }
       continue;
     }
     if(level===1)glazing(16.5,h,.05,-8.25,y,12.55,lg);else glazing(33,h,.05,0,y,12.55,lg);
     glazing(33,h,.05,0,y,-12.55,lg);glazing(.05,h,25,16.55,y,0,lg);
     glazing(.05,h,17.4,-16.55,y,-3.8,lg);glazing(.05,h,3.6,-16.55,y,10.7,lg);
-    for(let x=-16.5;x<=16.51;x+=33/8)for(const z of [-12.55,12.55])if(level!==1||z<0||x<.1)box(.14,h,.14,FRAME,x,y,z,lg);
-    // The parking entrance keeps two structural columns and a header beam, wide enough for cars.
-    if(level===1){for(const x of [8.25,16.5])box(.3,h,.3,FRAME,x,y,12.55,lg);box(16.5,.35,.3,FRAME,8.25,y+h-.35,12.55,lg);}
-    for(let z=-12.5;z<=12.51;z+=25/6)box(.14,h,.14,FRAME,16.55,y,z,lg);
-    for(const z of [-12.55,-.1,4.9,8.9,12.55])box(.14,h,.14,FRAME,-16.55,y,z,lg);
+    // Silver mullions about every 2 m and a transom at mid height give the glass its small square grid.
+    for(let x=-16.5;x<=16.51;x+=33/16)for(const z of [-12.55,12.55])if(level!==1||z<0||x<.1)box(.08,h,.08,MULLION,x,y,z,lg);
+    for(const z of [-12.55,12.55])if(level===1&&z>0)box(16.5,.06,.08,MULLION,-8.25,y+h/2,z,lg);else box(33,.06,.08,MULLION,0,y+h/2,z,lg);
+    // The parking entrance keeps two cream structural columns and a header beam, wide enough for cars.
+    if(level===1){for(const x of [8.25,16.5])box(.4,h,.4,CREAM,x,y,12.55,lg);box(16.5,.35,.3,CREAM,8.25,y+h-.35,12.55,lg);}
+    for(let z=-12.5;z<=12.51;z+=25/12)box(.08,h,.08,MULLION,16.55,y,z,lg);
+    box(.08,.06,25,MULLION,16.55,y+h/2,0,lg);
+    for(const z of [-12.55,-8.4,-4.2,-.1,4.9,8.9,12.55])box(.08,h,.08,MULLION,-16.55,y,z,lg);
+    // Vertical silver fins in front of the glass on the right of the front facade, as on the upper floors of the real building.
+    if(level>1)for(let x=4.2;x<=16.2;x+=.6)box(.09,h,.38,0xcfd4db,x,y,12.82,lg);
   }
   facade.traverse(o=>{o.castShadow=false;});
   const eveningLights=[];
