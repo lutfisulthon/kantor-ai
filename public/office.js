@@ -612,7 +612,7 @@
     box(2,.12,2,0xd9d4ca,0,-.12,0,g);box(.05,2.3,2,'glass',-.98,0,0,g);
     for(const s of [-1,1]){box(2,2.3,.05,'glass',0,0,s*.98,g);box(.08,2.3,.08,0xf6f4ef,.96,0,s*.96,g);box(.08,2.3,.08,0xf6f4ef,-.96,0,s*.96,g);}
     box(2.1,.14,2.1,NAVY,0,2.3,0,g);box(2.12,.04,2.12,GOLD,0,2.26,0,g);
-    return {z,g,y:floorY(3),floor:3,state:'idle',target:3,to:3,riders:[],timer:0};
+    return {z,g,y:floorY(3),floor:3,state:'idle',target:3,to:3,riders:[],timer:0,ready:0,gather:0};
   });
   // Glass curtain walls for the whole-building view: floors 1 to 3 are enclosed storeys, the lift tower stands beside the left door.
   const facade=new THREE.Group();scene.add(facade);facade.visible=false;
@@ -681,39 +681,38 @@
   // Phases: wait -> enter -> inside -> ride -> exit. Both cabins serve one shared queue; stepLifts moves them.
   const liftQueue=[];
   function beginLift(agent){
-    const from=agent.floor,to=agent.destination.floor,base=floorY(from),k=liftQueue.filter(a=>a.liftTrip.from===from).length;
+    const from=agent.floor,to=agent.destination.floor,base=floorY(from);
+    // Each person joins the cabin with the shorter queue (the nearer one on a tie), so a group splits across both lifts.
+    const load=l=>liftQueue.filter(a=>a.liftTrip.lift===l).length+(l.state==='idle'?0:2);
+    const lift=[...lifts].sort((a,b)=>load(a)-load(b)||Math.abs(a.floor-from)-Math.abs(b.floor-from))[0];
+    const k=liftQueue.filter(a=>a.liftTrip.lift===lift&&a.liftTrip.from===from).length,side=lift===lifts[0]?-1:1;
     floors[from].updateMatrixWorld(true);moveTo(travelRoot,agent.g);
     liftQueue.push(agent);
-    // Waiting spots fan out on both sides of the door, two deep.
-    agent.liftTrip={from,to,lift:null,phase:'wait',points:[new THREE.Vector3(-15.3+(Math.floor(k/2)%2)*.6,base,7.5+(k%2?1:-1)*(.35+Math.floor(k/4)%5*.55))]};
+    // Two queues inside the door, each on the side of its own cabin, two deep.
+    agent.liftTrip={from,to,lift,phase:'wait',points:[new THREE.Vector3(-15.3+(k%2)*.6,base,7.5+side*(.35+Math.floor(k/2)%5*.55))]};
     agent.state='lift';agent.g.visible=true;
   }
   function boardLift(lift,from,to){
-    // Everyone waiting on this floor for the same destination gets in, up to the cabin's capacity.
-    lift.riders=liftQueue.filter(a=>a.liftTrip.phase==='wait'&&a.liftTrip.from===from&&a.liftTrip.to===to&&a.liftTrip.lift===lift).slice(0,LIFT_SEATS);
-    lift.to=to;lift.state='boarding';lift.timer=0;
+    // The people in this cabin's queue on this floor with the same destination get in, up to its capacity.
+    lift.riders=liftQueue.filter(a=>a.liftTrip.phase==='wait'&&!a.liftTrip.points.length&&a.liftTrip.from===from&&a.liftTrip.to===to&&a.liftTrip.lift===lift).slice(0,LIFT_SEATS);
+    lift.to=to;lift.state='boarding';lift.timer=0;lift.ready=0;lift.gather=0;
     const base=floorY(from);
     lift.riders.forEach((a,i)=>{
-      liftQueue.splice(liftQueue.indexOf(a),1);const t=a.liftTrip;t.lift=lift;t.phase='enter';
+      liftQueue.splice(liftQueue.indexOf(a),1);const t=a.liftTrip;t.phase='enter';
       t.points=[new THREE.Vector3(-16,base,7.5),new THREE.Vector3(LIFT_HALL_X,base,lift.z),new THREE.Vector3(LIFT_X+.45-(i%2)*.9,base,lift.z-.55+Math.floor(i/2)*.55)];
     });
   }
   function stepLifts(dt){
-    // An idle cabin first picks up whoever called it and is now waiting on its floor.
     for(const lift of lifts){
       if(lift.state!=='idle')continue;
-      const called=liftQueue.find(a=>a.liftTrip.lift===lift&&a.liftTrip.phase==='wait'&&a.liftTrip.from===lift.floor);
-      if(called)boardLift(lift,called.liftTrip.from,called.liftTrip.to);
-    }
-    // Any other waiting group calls the nearest free cabin, so both lifts work at the same time.
-    for(const first of liftQueue){
-      const t=first.liftTrip;
-      if(t.phase!=='wait'||t.points.length||t.lift)continue;
-      const free=lifts.filter(l=>l.state==='idle'&&!liftQueue.some(a=>a.liftTrip.lift===l));
-      if(!free.length)break;
-      const lift=free.sort((a,b)=>Math.abs(a.floor-t.from)-Math.abs(b.floor-t.from))[0];
-      liftQueue.filter(a=>a.liftTrip.phase==='wait'&&!a.liftTrip.lift&&a.liftTrip.from===t.from&&a.liftTrip.to===t.to).slice(0,LIFT_SEATS).forEach(a=>a.liftTrip.lift=lift);
-      if(lift.floor===t.from)boardLift(lift,t.from,t.to);else{lift.state='moving';lift.target=t.from;}
+      const mine=liftQueue.filter(a=>a.liftTrip.lift===lift&&a.liftTrip.phase==='wait');
+      if(!mine.length){lift.ready=lift.gather=0;continue;}
+      const {from,to}=mine[0].liftTrip;
+      if(lift.floor!==from){lift.state='moving';lift.target=from;continue;}
+      const ready=mine.filter(a=>a.liftTrip.from===from&&a.liftTrip.to===to&&!a.liftTrip.points.length).length;
+      if(ready!==lift.ready){lift.ready=ready;lift.gather=0;}else lift.gather+=dt;
+      // Hold the doors briefly while more of the group is still walking up, so the cabin leaves fuller.
+      if(ready>=LIFT_SEATS||ready&&lift.gather>1.5)boardLift(lift,from,to);
     }
     for(const lift of lifts){
       if(lift.state==='idle')continue;
