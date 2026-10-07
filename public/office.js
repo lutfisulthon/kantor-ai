@@ -666,6 +666,14 @@
     if(level>1)for(let x=4.2;x<=16.2;x+=.6)box(.09,h,.38,0xcfd4db,x,y,12.82,lg);
     // Waves rise from this storey's band to the next: across the front towards the fins, and along the right side towards the back.
     if(level===2||level===3){waveRibbon('front',12.62,-5,5.5,y-.58,floorY(level+1)-.58,lg);waveRibbon('side',16.62,7,-4,y-.58,floorY(level+1)-.58,lg);}
+    // Entrance canopy over the driveway: a cream slab with rounded front corners on two tall round columns.
+    if(level===1){
+      const slab=new THREE.Shape(),x0=2,x1=14.5,z0=12.7,z1=18.4,r=1.6;
+      slab.moveTo(x0,-z0);slab.lineTo(x1,-z0);slab.lineTo(x1,-z1+r);slab.quadraticCurveTo(x1,-z1,x1-r,-z1);slab.lineTo(x0+r,-z1);slab.quadraticCurveTo(x0,-z1,x0,-z1+r);slab.lineTo(x0,-z0);
+      const geometry=new THREE.ExtrudeGeometry(slab,{depth:.5,bevelEnabled:false,curveSegments:12});geometry.rotateX(-Math.PI/2);
+      mesh(geometry,CREAM,0,3.25,0,lg);
+      for(const x of [3.4,13.1])cylinder(.38,.38,4.15,CREAM,x,-.9,17.3,lg);
+    }
   }
   facade.traverse(o=>{o.castShadow=false;});
   const eveningLights=[];
@@ -802,6 +810,12 @@
     const clearOfRoads=(x,z)=>Math.abs(z-24)>4.2&&Math.abs(x-34)>4.2;
     for(let x=-140;x<=140;x+=7)for(const z of [18.4,29.6])if(clearOfRoads(x,z)&&(x<0||x>16.5)&&Math.hypot(x,z)<142)trees.push([x,z,.9+rnd()*.3]);
     for(let z=-140;z<=140;z+=7)for(const x of [28.4,39.6])if(clearOfRoads(x,z)&&Math.hypot(x,z)<142)trees.push([x,z,.9+rnd()*.3]);
+    // Three flagpoles on the lawn beside the driveway, the Merah Putih in the middle and tallest.
+    for(const [x,h,top,bottom] of [[-4.6,6.2,0x1565c0,0xfafafa],[-3,7,MERAH,0xfafafa],[-1.4,6.2,0xfafafa,0x1565c0]]){
+      cylinder(.22,.26,.12,0xcfc8ba,x,-.9,15.2,skyline);cylinder(.04,.05,h,0xe9ebee,x,-.78,15.2,skyline);
+      mesh(new THREE.SphereGeometry(.08,12,8),GOLD,x,h-.7,15.2,skyline,false);
+      box(.02,.38,1.15,top,x,h-1.3,15.2+.6,skyline);box(.02,.38,1.15,bottom,x,h-1.68,15.2+.6,skyline);
+    }
     // Trees around the office lawn, clear of the building, the lift tower and the driveway.
     for(const [x,z,s] of [[-30,-20,1.4],[-34,-8,1.2],[-32,6,1.3],[-30,15,1.1],[-24,-22,1.2],[-12,-22,1.3],[0,-23,1.1],[12,-22,1.4],[22,-18,1.2],[23,-6,1.1],[22,6,1.3],[21,15,1],[-8,17,.8],[-14,17,.7],[-2,17.5,.7],[-26,17,.9]])trees.push([x,z,s]);
     for(let placed=0,tries=0;placed<130&&tries<900;tries++){
