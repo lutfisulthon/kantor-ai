@@ -629,6 +629,16 @@
     const geometry=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false,curveSegments:12});geometry.rotateX(-Math.PI/2);
     return mesh(geometry,color,0,y,0,parent);
   }
+  // The building's signature wave: a cream ribbon that leaves one storey's band and sweeps up to the next, like a signal.
+  // It runs along x on the front (z = at) or along z on the right side (x = at), from u0 at height y0 to u1 at y1.
+  function waveRibbon(side,at,u0,u1,y0,y1,parent){
+    const shape=new THREE.Shape(),N=40,h=.62,ease=t=>t*t*(3-2*t),top=[],bottom=[];
+    for(let i=0;i<=N;i++){const t=i/N,u=u0+(u1-u0)*t,y=y0+(y1-y0)*ease(t);top.push([u,y+h]);bottom.push([u,y]);}
+    shape.moveTo(...bottom[0]);for(const p of top)shape.lineTo(...p);for(const p of bottom.reverse())shape.lineTo(...p);
+    const geometry=new THREE.ExtrudeGeometry(shape,{depth:.3,bevelEnabled:false});
+    if(side==='front')return mesh(geometry,0xd8c59f,0,0,at,parent);
+    geometry.rotateY(-Math.PI/2);return mesh(geometry,0xd8c59f,at+.3,0,0,parent);
+  }
   for(let level=1;level<=4;level++){
     const y=floorY(level),h=FLOOR_GAP-.48,lg=new THREE.Group();facade.add(lg);facadeLevels[level]=lg;
     // A thick cream band with rounded corners wraps each storey; it knows its level so a click on it enters that floor.
@@ -654,6 +664,8 @@
     for(const z of [-12.55,-8.4,-4.2,-.1,4.9,8.9,12.55])box(.08,h,.08,MULLION,-16.55,y,z,lg);
     // Vertical silver fins in front of the glass on the right of the front facade, as on the upper floors of the real building.
     if(level>1)for(let x=4.2;x<=16.2;x+=.6)box(.09,h,.38,0xcfd4db,x,y,12.82,lg);
+    // Waves rise from this storey's band to the next: across the front towards the fins, and along the right side towards the back.
+    if(level===2||level===3){waveRibbon('front',12.62,-5,5.5,y-.58,floorY(level+1)-.58,lg);waveRibbon('side',16.62,7,-4,y-.58,floorY(level+1)-.58,lg);}
   }
   facade.traverse(o=>{o.castShadow=false;});
   const eveningLights=[];
