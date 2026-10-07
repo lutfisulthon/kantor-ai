@@ -599,7 +599,7 @@
   for(const z of [-2.5,-1.5,-.5,.5]){plant(15.5,z,.22,2.37);cylinder(.08,.07,.17,CARD,15.45,1.87,z);}
   roofSpot(14.1,-1,Math.PI/2,'mengambil kopi di bar rooftop',{standing:true,roofPose:'coffee'});
 
-  // Two glass lifts in a slim tower beside the left door: the cabin at z 5.6 carries people up, the one at z 9.4 down.
+  // Two glass lifts in a slim tower beside the left door, at z 5.6 and 9.4; both serve the same queue.
   // The tower and cabins are drawn in the building view; each cabin travels with its riders.
   const liftShaft=new THREE.Group();scene.add(liftShaft);
   const LIFT_X=-18.9,LIFT_HALL_X=-17.3,LIFT_SEATS=6,LIFT_TOP=floorY(4)+3;
@@ -612,7 +612,7 @@
     box(2,.12,2,0xd9d4ca,0,-.12,0,g);box(.05,2.3,2,'glass',-.98,0,0,g);
     for(const s of [-1,1]){box(2,2.3,.05,'glass',0,0,s*.98,g);box(.08,2.3,.08,0xf6f4ef,.96,0,s*.96,g);box(.08,2.3,.08,0xf6f4ef,-.96,0,s*.96,g);}
     box(2.1,.14,2.1,NAVY,0,2.3,0,g);box(2.12,.04,2.12,GOLD,0,2.26,0,g);
-    return {z,g,y:floorY(3),floor:3,state:'idle',target:3,to:3,riders:[],queue:[],timer:0};
+    return {z,g,y:floorY(3),floor:3,state:'idle',target:3,to:3,riders:[],timer:0};
   });
   // Glass curtain walls for the whole-building view: floors 1 to 3 are enclosed storeys, the lift tower stands beside the left door.
   const facade=new THREE.Group();scene.add(facade);facade.visible=false;
@@ -677,30 +677,47 @@
   // attach() re-derives Euler angles from the matrix, which turns a yaw past 90 degrees into (PI, PI-yaw, PI). Everything
   // else only turns rotation.y, so that would mirror the person's heading. Floors and lifts never rotate, so the yaw carries over.
   function moveTo(parent,g){const yaw=new THREE.Euler().setFromQuaternion(g.getWorldQuaternion(new THREE.Quaternion()),'YXZ').y;parent.attach(g);g.rotation.set(0,yaw,0);}
-  // A trip between floors: wait inside by the left door, walk into the cabin for that direction, ride, then step out.
-  // Phases: wait -> enter -> inside -> ride -> exit. The cabin itself is moved by stepLifts.
+  // A trip between floors: wait inside by the left door, walk into whichever cabin comes, ride, then step out.
+  // Phases: wait -> enter -> inside -> ride -> exit. Both cabins serve one shared queue; stepLifts moves them.
+  const liftQueue=[];
   function beginLift(agent){
-    const from=agent.floor,to=agent.destination.floor,up=to>from,lift=lifts[up?0:1],k=lift.queue.length,base=floorY(from);
+    const from=agent.floor,to=agent.destination.floor,base=floorY(from),k=liftQueue.filter(a=>a.liftTrip.from===from).length;
     floors[from].updateMatrixWorld(true);moveTo(travelRoot,agent.g);
-    lift.queue.push(agent);
-    agent.liftTrip={from,to,lift,phase:'wait',points:[new THREE.Vector3(-15.3+(k%2)*.6,base,7.5+(up?-1:1)*(.35+Math.floor(k/2)%5*.55))]};
+    liftQueue.push(agent);
+    // Waiting spots fan out on both sides of the door, two deep.
+    agent.liftTrip={from,to,lift:null,phase:'wait',points:[new THREE.Vector3(-15.3+(Math.floor(k/2)%2)*.6,base,7.5+(k%2?1:-1)*(.35+Math.floor(k/4)%5*.55))]};
     agent.state='lift';agent.g.visible=true;
   }
+  function boardLift(lift,from,to){
+    // Everyone waiting on this floor for the same destination gets in, up to the cabin's capacity.
+    lift.riders=liftQueue.filter(a=>a.liftTrip.phase==='wait'&&a.liftTrip.from===from&&a.liftTrip.to===to&&a.liftTrip.lift===lift).slice(0,LIFT_SEATS);
+    lift.to=to;lift.state='boarding';lift.timer=0;
+    const base=floorY(from);
+    lift.riders.forEach((a,i)=>{
+      liftQueue.splice(liftQueue.indexOf(a),1);const t=a.liftTrip;t.lift=lift;t.phase='enter';
+      t.points=[new THREE.Vector3(-16,base,7.5),new THREE.Vector3(LIFT_HALL_X,base,lift.z),new THREE.Vector3(LIFT_X+.45-(i%2)*.9,base,lift.z-.55+Math.floor(i/2)*.55)];
+    });
+  }
   function stepLifts(dt){
+    // An idle cabin first picks up whoever called it and is now waiting on its floor.
     for(const lift of lifts){
-      if(lift.state==='idle'){
-        const first=lift.queue.find(a=>a.liftTrip.phase==='wait'&&!a.liftTrip.points.length);
-        if(!first)continue;
-        const {from,to}=first.liftTrip;
-        if(lift.floor!==from){lift.state='moving';lift.target=from;continue;}
-        lift.riders=lift.queue.filter(a=>a.liftTrip.phase==='wait'&&a.liftTrip.from===from&&a.liftTrip.to===to).slice(0,LIFT_SEATS);
-        lift.to=to;lift.state='boarding';lift.timer=0;
-        const base=floorY(from);
-        lift.riders.forEach((a,i)=>{
-          lift.queue.splice(lift.queue.indexOf(a),1);const t=a.liftTrip;t.phase='enter';
-          t.points=[new THREE.Vector3(-16,base,7.5),new THREE.Vector3(LIFT_HALL_X,base,lift.z),new THREE.Vector3(LIFT_X+.45-(i%2)*.9,base,lift.z-.55+Math.floor(i/2)*.55)];
-        });
-      }else if(lift.state==='boarding'){
+      if(lift.state!=='idle')continue;
+      const called=liftQueue.find(a=>a.liftTrip.lift===lift&&a.liftTrip.phase==='wait'&&a.liftTrip.from===lift.floor);
+      if(called)boardLift(lift,called.liftTrip.from,called.liftTrip.to);
+    }
+    // Any other waiting group calls the nearest free cabin, so both lifts work at the same time.
+    for(const first of liftQueue){
+      const t=first.liftTrip;
+      if(t.phase!=='wait'||t.points.length||t.lift)continue;
+      const free=lifts.filter(l=>l.state==='idle'&&!liftQueue.some(a=>a.liftTrip.lift===l));
+      if(!free.length)break;
+      const lift=free.sort((a,b)=>Math.abs(a.floor-t.from)-Math.abs(b.floor-t.from))[0];
+      liftQueue.filter(a=>a.liftTrip.phase==='wait'&&!a.liftTrip.lift&&a.liftTrip.from===t.from&&a.liftTrip.to===t.to).slice(0,LIFT_SEATS).forEach(a=>a.liftTrip.lift=lift);
+      if(lift.floor===t.from)boardLift(lift,t.from,t.to);else{lift.state='moving';lift.target=t.from;}
+    }
+    for(const lift of lifts){
+      if(lift.state==='idle')continue;
+      if(lift.state==='boarding'){
         lift.timer+=dt;
         if(lift.riders.every(a=>a.liftTrip.phase==='inside')&&lift.timer>.8||lift.timer>15){lift.riders.forEach(a=>{a.liftTrip.phase='ride';a.liftTrip.points=[];});lift.state='riding';}
       }else if(lift.state==='moving'||lift.state==='riding'){
@@ -1336,7 +1353,7 @@
     if(agent.state==='lift'){
       const trip=agent.liftTrip;let remaining=trip.phase==='ride'?0:dt*3.1;
       // Someone still waiting whose plans changed back to this floor leaves the queue.
-      if(trip.phase==='wait'&&agent.destination.floor===trip.from){const q=trip.lift.queue;if(q.includes(agent))q.splice(q.indexOf(agent),1);trip.phase='exit';trip.to=trip.from;trip.points=[];}
+      if(trip.phase==='wait'&&agent.destination.floor===trip.from){if(liftQueue.includes(agent))liftQueue.splice(liftQueue.indexOf(agent),1);trip.phase='exit';trip.to=trip.from;trip.points=[];}
       if(trip.points.length){const d=trip.points[0].clone().sub(agent.g.position);if(Math.hypot(d.x,d.z)>.05){agent.heading=Math.atan2(d.x,d.z);if(Math.abs(wrap(agent.heading-agent.g.rotation.y))>1.3)remaining=0;}}
       while(trip.points.length&&remaining>0){
         const target=trip.points[0],delta=target.clone().sub(agent.g.position),distance=delta.length();
