@@ -9,11 +9,25 @@
 .chat-msg.user{align-self:flex-end;background:#0a2a5c;color:#fff;border-bottom-right-radius:3px}
 .chat-msg.agent{align-self:flex-start;background:#eef3fa;color:var(--ink);border:1px solid #d5deec;border-bottom-left-radius:3px}
 .chat-msg.typing{color:var(--ink-2);font-style:italic}
+.chat-msg .chat-who{display:block;font-size:12px;margin-bottom:4px;color:#0a2a5c}.chat-msg .chat-text{margin:0;white-space:pre-wrap}.chat-msg.failed{background:#fdeee9;border-color:#f0c4b8}
 .chat-msg .chat-meta{display:block;margin-top:6px;font:500 11px var(--mono);opacity:.75}
 .chat-msg button{margin-top:8px;min-height:36px;padding:6px 10px;border:1px solid #0a2a5c;border-radius:5px;background:#fff;color:#0a2a5c;font:inherit;font-size:12px;cursor:pointer}
-#chatForm{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+#chatForm{position:relative;display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
 #chatInput{flex:1;min-height:44px;max-height:140px;resize:vertical;padding:10px;border:1px solid var(--line);border-radius:5px;font:inherit;font-size:13px;background:#fff;color:var(--ink)}
 #chatFeedback{margin:0;padding:0 16px 10px;font-size:12px;color:#0a2a5c}#chatFeedback:empty{display:none}
 body:has(#chat:not([hidden])) #info,body:has(#chat:not([hidden])) #log{display:none}
 @media(max-width:1000px){#chat{left:12px;right:12px;top:auto;bottom:12px;width:auto;height:min(70dvh,560px)}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#chatMentions{position:absolute;left:16px;right:16px;bottom:100%;margin:0 0 4px;padding:4px;list-style:none;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(10,42,92,.15);max-height:260px;overflow:auto;font-size:13px;z-index:2}
+#chatMentions li{padding:9px 10px;border-radius:5px;cursor:pointer}#chatMentions li.active{background:#e8f0fb;color:#0a2a5c}
+#chatMentions li[aria-disabled=true]{color:var(--ink-2);cursor:default;opacity:.7}
+.ui #bChat[aria-expanded=true],body:has(#chat:not([hidden])) #bChat{background:#e8f0fb;border-color:#e8f0fb}
+/* On narrow screens the header has no room for another label, so Obrolan shows as a speech-bubble icon. */
+.ui #bChat::before{content:'';display:inline-block;width:16px;height:16px;margin-right:8px;vertical-align:-3px;background:currentColor;-webkit-mask:var(--i-chat) center/contain no-repeat;mask:var(--i-chat) center/contain no-repeat}
+body{--i-chat:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Cpath d='M4 5h16v11H9l-5 4z'/%3E%3C/svg%3E")}
+@media(max-width:1000px){.ui #bChat{align-self:center;min-height:44px;width:44px;padding:0;border-radius:12px;font-size:0}.ui #bChat::before{margin:0;width:18px;height:18px}}
+/* Phones: Kehidupan kantor also becomes an icon (a coffee cup), so the header stays on one row. */
+body{--i-life:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 11h2a2 2 0 0 1 0 4h-2M8 3v3M12 3v3'/%3E%3C/svg%3E")}
+@media(max-width:560px){.ui #bLife{align-self:center;min-height:44px;width:44px;padding:0;border-radius:12px;font-size:0}.ui #bLife::before{content:'';display:inline-block;width:18px;height:18px;background:currentColor;-webkit-mask:var(--i-life) center/contain no-repeat;mask:var(--i-life) center/contain no-repeat}}
+@media(max-width:420px){.ui #brand strong{font-size:14px;line-height:1.1}.ui #brand .brand-meta{display:none}}
+@media(max-width:420px){.ui #bTasks{font-size:0;padding:0 10px}.ui #bTasks #taskCount{font-size:13px}.ui #bTasks::before{margin-right:6px}}

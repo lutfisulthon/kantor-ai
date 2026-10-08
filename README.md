@@ -82,7 +82,7 @@ Tugas terlihat langsung di kantor:
 
 Ketiganya juga berjalan tanpa server (tugas dari localStorage).
 
-**Ngobrol dengan agen:** pilih anggota yang tersambung ke agen AI (titik hijau), lalu klik **Ngobrol** di panel detailnya. Panel chat terbuka di kanan; Enter mengirim, Shift+Enter membuat baris baru. Selama agen membalas, karakternya di 3D menampilkan balon "Mengetik…". Setiap balasan punya tombol **Jadikan tugas**: permintaan Anda menjadi judul tugas, percakapannya menjadi arahan, lalu tugas masuk antrean agen itu dan tetap lewat persetujuan seperti biasa. Riwayat chat per anggota tersimpan di server (`data/chats.json`, 200 pesan terakhir) dan bisa dihapus dengan **Hapus**. Agen hanya membalas satu pesan dalam satu waktu. Tanpa `ANTHROPIC_API_KEY`, balasannya berupa contoh berlabel uji coba. `tests/chat.cjs` menguji API chat, panel chat, dan tombol Jadikan tugas.
+**Obrolan tim:** tombol **Obrolan** di header membuka panel chat bersama di kanan. Panggil agen dengan `@` diikuti inisial atau nama, misalnya `@KR tolong buat ide konten minggu ini`; saat mengetik `@` muncul daftar anggota, dan anggota yang belum tersambung ke agen AI tampil abu-abu. Panggil beberapa agen sekaligus (`@KR @KS ...`) dan mereka membalas bergiliran; agen berikutnya bisa membaca balasan agen sebelumnya. Pesan tanpa `@` tersimpan sebagai catatan tanpa balasan. Selama agen membalas, karakternya di 3D menampilkan balon "Mengetik…". Setiap balasan punya tombol **Jadikan tugas**: permintaan (tanpa panggilan `@`) menjadi judul tugas, percakapannya menjadi arahan, lalu tugas masuk antrean agen itu dan tetap lewat persetujuan. Tombol **Ngobrol** di panel detail karakter membuka obrolan yang sama dengan `@inisial` sudah terisi. Riwayat tersimpan di server (`data/chats.json`, 300 pesan terakhir) dan bisa dihapus dengan **Hapus** setelah semua balasan selesai. Tanpa `ANTHROPIC_API_KEY`, balasannya berupa contoh berlabel uji coba. `tests/chat.cjs` menguji API obrolan, panggilan `@`, daftar pilihan anggota, dan tombol Jadikan tugas.
 
 Model bawaan adalah `claude-sonnet-5-5`; ganti dengan `ANTHROPIC_MODEL` di `.env`. `tests/server.cjs` menguji alur dry run dari awal sampai akhir, tugas manual, penjaga API, persistensi, dan jalur error agen; tes ini menyalakan servernya sendiri.
 
@@ -94,7 +94,7 @@ Model bawaan adalah `claude-sonnet-5-5`; ganti dengan `ANTHROPIC_MODEL` di `.env
 - `public/tasks.js`: tugas, validasi, penyimpanan, filter, dan ekspor.
 - `public/tasks.css`: panel tugas responsif, fokus keyboard, dan gaya formulir.
 - `public/music.js`: komposisi instrumental, kontrol putar/mati, dan volume.
-- `public/chat.js`, `public/chat.css`: panel chat dengan agen AI dan tombol Jadikan tugas.
+- `public/chat.js`, `public/chat.css`: panel Obrolan tim, panggilan `@`, dan tombol Jadikan tugas.
 - `server/server.js`: server lokal (file statis + API tugas dan chat) dan pekerja agen AI.
 - `server/agents.js`: anggota yang tersambung ke agen AI beserta instruksinya.
 - `public/vendor/three/`: Three.js r128 (`three.min.js` dari paket npm `three@0.128.0`, sama dengan berkas CDN sebelumnya) beserta lisensinya.

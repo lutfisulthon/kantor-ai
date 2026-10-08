@@ -37,11 +37,11 @@ function save() {
   durable=JSON.stringify(tasks);
   } catch(error) { tasks=JSON.parse(durable); throw error; }
 }
-// Chats: one conversation per connected member, kept in their own file so a broken chat never blocks tasks.
-let chats = {};
-try { chats = JSON.parse(fs.readFileSync(CHATS_FILE, 'utf8')); if (!chats || typeof chats !== 'object' || Array.isArray(chats)) throw new Error('not an object'); }
-catch (error) { if (error.code !== 'ENOENT') { console.error(`Cannot read ${CHATS_FILE}: ${error.message}. Fix or move the file, then restart.`); process.exit(1); } chats = {}; }
-function saveChats() { const tmp = `${CHATS_FILE}.${process.pid}.tmp`; fs.writeFileSync(tmp, JSON.stringify(chats, null, 2)); fs.renameSync(tmp, CHATS_FILE); }
+// The team chat room, kept in its own file so a broken chat never blocks tasks.
+let room = [];
+try { room = JSON.parse(fs.readFileSync(CHATS_FILE, 'utf8')).room; if (!Array.isArray(room)) throw new Error('no room list'); }
+catch (error) { if (error.code !== 'ENOENT' && !(error.message === 'no room list')) { console.error(`Cannot read ${CHATS_FILE}: ${error.message}. Fix or move the file, then restart.`); process.exit(1); } room = []; }
+function saveRoom() { const tmp = `${CHATS_FILE}.${process.pid}.tmp`; fs.writeFileSync(tmp, JSON.stringify({room}, null, 2)); fs.renameSync(tmp, CHATS_FILE); }
 const now = () => new Date().toISOString();
 const MEMBERS = new Set(['Koh Arman','Koh Wira','Kak Rani','Kak Dewi','Mira','Tari','Bagas Pratama Putra','Rizky Hakim','Yoga','Bang Eko','Gilang','Kak Sinta','Kak Laras']);
 const text = (value, max) => typeof value === 'string' ? value.trim().slice(0, max) : '';
@@ -99,18 +99,29 @@ async function work(name) {
 }
 const kick = () => Object.keys(agents).forEach(work);
 
-// ---- chat: a direct conversation with one connected member ----
-const CHAT_RULES = 'You are now chatting directly with a colleague in the office app, not working on a task. Reply conversationally and briefly, in the language of their last message. Never use the QUESTIONS: format here. Do not claim to have posted, sent, changed or published anything. If the request needs real work, say what you would do and suggest turning it into a task with the "Jadikan tugas" button.';
-const chatting = new Set();
-async function chatReply(name, history) {
+// ---- team chat room: people call connected members with @; each called member replies in turn ----
+const ROOM_RULES = 'You are in the team chat room of the office app, not working on a task. A colleague called you with @. Reply conversationally and briefly, in the language of their message, as yourself only; other members may reply after you and you can see what they already said. Never use the QUESTIONS: format here. Do not claim to have posted, sent, changed or published anything. If the request needs real work, say what you would do and suggest turning it into a task with the "Jadikan tugas" button.';
+const pending = [];               // members still to reply, in order
+let replying = null, roomChain = Promise.resolve();
+const addToRoom = message => { room = [...room, {id: crypto.randomUUID(), at: now(), ...message}].slice(-300); saveRoom(); };
+async function roomReply(name) {
   if (DRY_RUN) {
     await new Promise(resolve => setTimeout(resolve, Number(process.env.DRY_RUN_DELAY_MS ?? 1200)));
-    return `UJI COBA: ANTHROPIC_API_KEY belum diisi, jadi ini balasan contoh, bukan keluaran AI.\n\nSaya ${agents[name].role}. Pesan Anda: "${history.at(-1).text.slice(0, 200)}". Setelah tersambung ke model, saya akan menjawab sesuai peran saya.`;
+    const ask = [...room].reverse().find(m => m.role === 'user');
+    return `UJI COBA: ANTHROPIC_API_KEY belum diisi, jadi ini balasan contoh, bukan keluaran AI.\n\nSaya ${agents[name].role}. Pesan Anda: "${(ask?.text || '').slice(0, 200)}". Setelah tersambung ke model, saya akan menjawab sesuai peran saya.`;
   }
-  // The last 20 messages are enough context; the model needs alternating turns that start with the person.
-  const turns = history.slice(-20).map(m => ({role: m.role === 'user' ? 'user' : 'assistant', content: m.text}));
-  while (turns.length && turns[0].role !== 'user') turns.shift();
-  return callModel(agents[name], `${agents[name].system}\n\n${CHAT_RULES}`, turns);
+  // The last 30 messages as one transcript, so the member sees the question and what colleagues already answered.
+  const transcript = room.slice(-30).map(m => `${m.role === 'user' ? 'Pengguna' : `${m.name} (${agents[m.name]?.role || 'agen'})`}: ${m.text}`).join('\n\n');
+  return callModel(agents[name], `${agents[name].system}\n\n${ROOM_RULES}`, [{role: 'user', content: `Team chat so far:\n\n${transcript}\n\nReply now as ${name}.`}]);
+}
+function callMembers(names) {
+  pending.push(...names);
+  for (const name of names) roomChain = roomChain.then(async () => {
+    replying = name; pending.splice(pending.indexOf(name), 1);
+    try { addToRoom({role: 'agent', name, text: (await roomReply(name)).slice(0, 10000), by: DRY_RUN ? 'dry-run' : modelOf(agents[name])}); }
+    catch (error) { addToRoom({role: 'agent', name, error: true, text: error.name === 'AbortError' ? 'Agen terlalu lama menjawab.' : error.message === 'fetch failed' ? 'Tidak dapat menghubungi API model. Periksa koneksi.' : error.message}); console.error(`Chat reply by ${name} failed: ${error.message}`); }
+    finally { replying = null; }
+  });
 }
 
 // ---- HTTP ----
@@ -161,25 +172,17 @@ async function api(req, res, url) {
     }
     return send(res,200,{mode:DRY_RUN?'dry-run':'claude',createdAt:now(),notes});
   }
-  const chatMatch = url.pathname.match(/^\/api\/chat\/([^/]+)$/);
-  if (chatMatch) {
-    let name; try { name = decodeURIComponent(chatMatch[1]); } catch { return send(res, 400, {error: 'Nama tidak valid.'}); }
-    if (!Object.hasOwn(agents, name)) return send(res, 404, {error: 'Anggota ini belum tersambung ke agen AI.'});
-    if (req.method === 'GET') return send(res, 200, {messages: chats[name] || []});
-    if (req.method === 'DELETE') { if (chatting.has(name)) return send(res, 409, {error: 'Tunggu balasan selesai sebelum menghapus obrolan.'}); delete chats[name]; saveChats(); return send(res, 200, {messages: []}); }
+  if (url.pathname === '/api/room') {
+    const state = () => ({messages: room, replying: [replying, ...pending].filter(Boolean)});
+    if (req.method === 'GET') return send(res, 200, state());
+    if (req.method === 'DELETE') { if (replying || pending.length) return send(res, 409, {error: 'Tunggu semua balasan selesai sebelum menghapus obrolan.'}); room = []; saveRoom(); return send(res, 200, state()); }
     if (req.method === 'POST') {
-      const message = text((await readJson(req))?.text, 2000);
+      const input = await readJson(req), message = text(input?.text, 2000);
       if (!message) return send(res, 400, {error: 'Tulis pesan terlebih dahulu.'});
-      if (chatting.has(name)) return send(res, 409, {error: 'Agen ini masih membalas pesan sebelumnya.'});
-      chatting.add(name);
-      try {
-        const history = chats[name] = [...(chats[name] || []), {role: 'user', text: message, at: now()}].slice(-200); saveChats();
-        let reply;
-        try { reply = (await chatReply(name, history)).slice(0, 10000); }
-        catch (error) { return send(res, 502, {error: error.name === 'AbortError' ? 'Agen terlalu lama menjawab.' : error.message === 'fetch failed' ? 'Tidak dapat menghubungi API model. Periksa koneksi.' : error.message, messages: chats[name]}); }
-        chats[name] = [...chats[name], {role: 'agent', text: reply, at: now(), by: DRY_RUN ? 'dry-run' : modelOf(agents[name])}].slice(-200); saveChats();
-        return send(res, 200, {messages: chats[name]});
-      } finally { chatting.delete(name); }
+      const mentions = Array.isArray(input.mentions) ? [...new Set(input.mentions)] : [];
+      if (mentions.length > 6 || mentions.some(n => !Object.hasOwn(agents, n))) return send(res, 400, {error: 'Hanya anggota yang tersambung ke agen AI yang bisa dipanggil, paling banyak 6 sekaligus.'});
+      addToRoom({role: 'user', text: message, mentions}); callMembers(mentions);
+      return send(res, 201, state());
     }
   }
   if (url.pathname === '/api/agents' && req.method === 'GET')
