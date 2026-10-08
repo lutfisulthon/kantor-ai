@@ -52,13 +52,20 @@ const settled=async port=>{for(let i=0;i<80;i++){const s=(await api(port)).body;
     await page.waitForFunction(()=>document.querySelectorAll('#chatLog .chat-msg:not(.typing)').length===8&&!document.querySelector('#chatLog .typing'));
     assert.match(await page.locator('#chatLog .chat-msg.agent').last().innerText(),/^KS/);
     await page.screenshot({path:path.join(os.tmpdir(),'kantor-chat.png')});
-    // The Ngobrol button on a character opens the room with that member already called.
+    // Per-member tabs: KR's tab shows only the messages that called KR and KR's replies; sending there goes to KR.
+    assert.deepEqual(await page.locator('#chatTabs button').allInnerTexts(),['Semua','KR','KS']);
+    await page.locator('#chatTabs button',{hasText:'KR'}).click();
+    assert.deepEqual(await page.locator('#chatLog .chat-msg').allInnerTexts().then(t=>t.map(x=>x.split('\n')[0])),['@KR @KS siapkan pengumuman libur','KR · Social Media Specialist']);
+    await page.fill('#chatInput','ide konten minggu depan?');await page.press('#chatInput','Enter');
+    await page.waitForFunction(()=>document.querySelectorAll('#chatLog .chat-msg.agent:not(.typing)').length===2&&!document.querySelector('#chatLog .typing'));
+    assert.equal((await (await fetch('http://127.0.0.1:4186/api/room')).json()).messages.at(-2).mentions[0],'Kak Rani');
+    // The Ngobrol button on a character opens the room on that member's tab.
     await page.click('#closeChat');await page.selectOption('#teamSelect','Koh Arman');assert.equal(await page.isVisible('#iChat'),false,'no chat for simulated members');
-    await page.selectOption('#teamSelect','Kak Rani');await page.click('#iChat');
-    assert.equal(await page.inputValue('#chatInput'),'@KR ');assert.equal(await page.isVisible('#info'),false,'the chat panel takes the place of the details panel');
+    await page.selectOption('#teamSelect','Kak Sinta');await page.click('#iChat');
+    assert.equal(await page.getAttribute('#chatTabs button[aria-selected=true]','title'),'KS · Customer Service');assert.equal(await page.isVisible('#info'),false,'the chat panel takes the place of the details panel');
     await page.setViewportSize({width:375,height:812});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     await page.click('#closeChat');assert.equal(await page.isVisible('#chat'),false);
     assert.deepEqual(errors,[]);
-    console.log('PASS: Obrolan panel, @ picker with disabled members, typing state, Jadikan tugas, Ngobrol prefills @, mobile layout');
+    console.log('PASS: Obrolan panel, @ picker with disabled members, typing state, Jadikan tugas, per-member tabs, Ngobrol opens the member tab, mobile layout');
   }finally{await browser.close();server.kill();}
 })().catch(e=>{console.error(e);process.exit(1);});

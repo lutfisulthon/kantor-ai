@@ -55,6 +55,7 @@
   <section id="info" class="panel" aria-label="Detail anggota tim" hidden></section>
   <section id="chat" class="panel" aria-labelledby="chatName" hidden>
     <header class="chat-head"><div><h2 id="chatName">Obrolan tim</h2><p>Panggil agen dengan @, misalnya @KR</p></div><button type="button" class="btn" id="clearChat">Hapus</button><button type="button" class="btn" id="closeChat" aria-label="Tutup obrolan">×</button></header>
+    <div id="chatTabs" role="tablist" aria-label="Riwayat per agen"></div>
     <div id="chatLog" aria-live="polite"></div>
     <p id="chatFeedback" role="status"></p>
     <form id="chatForm"><ul id="chatMentions" role="listbox" aria-label="Pilih anggota" hidden></ul><label for="chatInput" class="sr-only">Pesan</label><textarea id="chatInput" rows="2" maxlength="2000" placeholder="Tulis pesan… ketik @ untuk memanggil agen" autocomplete="off"></textarea><button type="submit" class="btn primary" id="chatSend">Kirim</button></form>

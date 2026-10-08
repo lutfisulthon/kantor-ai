@@ -2,7 +2,7 @@
   // The team chat room. People call members connected to an AI agent with @ (initials or name); each called
   // member replies in turn on the server, so the panel polls while replies are pending. History lives on the server.
   const $ = id => document.getElementById(id);
-  let team = [], messages = [], replying = [], poll = null, sending = false, picker = {items: [], index: 0, start: -1};
+  let team = [], messages = [], replying = [], tab = null, seen = {}, poll = null, sending = false, picker = {items: [], index: 0, start: -1};
   const person = name => team.find(p => p.n === name);
   const initials = name => person(name)?.initials || name;
   const connected = name => !!window.officeTasks.agentFor(name);
@@ -26,11 +26,28 @@
   const mentionsIn = text => [...new Set(mentionHits(text).map(h => h.name))];
   const withoutMentions = text => mentionHits(text).reverse().reduce((t, h) => t.slice(0, h.start) + t.slice(h.end), text).replace(/\s+/g, ' ').trim();
   function node(tag, className, text) { const item = document.createElement(tag); if (className) item.className = className; if (text !== undefined) item.textContent = text; return item; }
+  // A member's tab shows only their conversation: messages that called them and their own replies.
+  const inTab = (m, name) => !name || (m.role === 'user' ? m.mentions?.includes(name) : m.name === name);
+  const repliesBy = name => messages.filter(m => m.role !== 'user' && m.name === name).length;
+  // Tabs: Semua plus one per member connected to an AI agent; a dot marks replies not seen yet.
+  function renderTabs() {
+    const bar = $('chatTabs'), members = team.filter(p => connected(p.n));
+    if (tab) seen[tab] = repliesBy(tab); else members.forEach(p => { seen[p.n] = repliesBy(p.n); });
+    bar.replaceChildren(...[null, ...members.map(p => p.n)].map(name => {
+      const button = node('button', '', name ? initials(name) : 'Semua'); button.type = 'button'; button.setAttribute('role', 'tab');
+      button.setAttribute('aria-selected', String(tab === name)); if (name) button.title = `${initials(name)} · ${person(name)?.role || ''}`;
+      if (name && repliesBy(name) > (seen[name] || 0)) button.classList.add('unread');
+      button.onclick = () => { tab = name; feedback(''); render(); $('chatInput').focus(); };
+      return button;
+    }));
+  }
   function render() {
+    renderTabs();
     const log = $('chatLog'), atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
     log.replaceChildren();
-    if (!messages.length && !replying.length) log.append(node('p', 'empty', 'Panggil agen dengan @, misalnya "@KR tolong buat ide konten minggu ini". Panggil beberapa sekaligus untuk diskusi; hasilnya bisa dijadikan tugas.'));
+    if (!messages.some(m => inTab(m, tab)) && !replying.length) log.append(node('p', 'empty', tab ? `Belum ada obrolan dengan ${initials(tab)}. Pesan yang dikirim dari tab ini langsung masuk ke ${initials(tab)}.` : 'Panggil agen dengan @, misalnya "@KR tolong buat ide konten minggu ini", atau pilih tab agen di atas. Panggil beberapa sekaligus untuk diskusi; hasilnya bisa dijadikan tugas.'));
     messages.forEach((m, i) => {
+      if (!inTab(m, tab)) return;
       if (m.role === 'user') { log.append(node('p', 'chat-msg user', m.text)); return; }
       const item = node('div', `chat-msg agent${m.error ? ' failed' : ''}`);
       item.append(node('strong', 'chat-who', `${initials(m.name)} · ${person(m.name)?.role || ''}`), node('p', 'chat-text', m.error ? `Gagal membalas: ${m.text}` : m.text));
@@ -40,7 +57,7 @@
       }
       log.append(item);
     });
-    for (const name of replying) log.append(node('p', 'chat-msg agent typing', `${initials(name)} sedang mengetik…`));
+    for (const name of replying.filter(n => !tab || n === tab)) log.append(node('p', 'chat-msg agent typing', `${initials(name)} sedang mengetik…`));
     hint();
     if (atBottom || sending) log.scrollTop = log.scrollHeight;
   }
@@ -90,10 +107,13 @@
   }
   const lastCalled = () => ([...messages].reverse().find(m => m.role === 'user' && m.mentions?.length)?.mentions || []).filter(connected);
   // The placeholder says who an un-addressed message will go to.
-  function hint() { const last = lastCalled(); $('chatInput').placeholder = last.length ? `Membalas ${last.map(n => '@' + initials(n)).join(' ')}… ketik @ untuk memanggil agen lain` : 'Tulis pesan… ketik @ untuk memanggil agen'; }
+  // Who a message without @ goes to: the open member tab, or in Semua whoever was called last.
+  const defaultTarget = () => tab ? [tab] : lastCalled();
+  function hint() { const last = defaultTarget(); $('chatInput').placeholder = tab ? `Pesan untuk ${initials(tab)}… ketik @ untuk mengajak agen lain` : last.length ? `Membalas ${last.map(n => '@' + initials(n)).join(' ')}… ketik @ untuk memanggil agen lain` : 'Tulis pesan… ketik @ untuk memanggil agen'; }
   function open(name) {
     $('chat').hidden = false; feedback('');
-    if (name && connected(name)) { const input = $('chatInput'), tag = `@${initials(name)} `; if (!input.value.includes(tag.trim())) input.value = tag + input.value; }
+    if (name && connected(name)) tab = name;
+    render();
     $('chatInput').focus(); refresh();
   }
   function close() { $('chat').hidden = true; hidePicker(); clearTimeout(poll); poll = null; }
@@ -122,9 +142,9 @@
         event.preventDefault();
         const text = $('chatInput').value.trim(); if (!text || sending) return;
         // Without any @, the message goes to whoever was called last, so a conversation carries on without retyping @.
-        const named = mentionsIn(text), offline = named.filter(n => !connected(n)), mentions = named.length ? named.filter(connected) : lastCalled();
+        const named = mentionsIn(text), offline = named.filter(n => !connected(n)), mentions = named.length ? [...new Set([...(tab ? [tab] : []), ...named.filter(connected)])] : defaultTarget();
         sending = true; $('chatSend').disabled = true;
-        feedback(offline.length ? `${offline.map(initials).join(', ')} belum tersambung ke agen AI, jadi tidak akan membalas.` : !named.length && mentions.length ? `Melanjutkan dengan ${mentions.map(initials).join(', ')}.` : mentions.length ? '' : 'Pesan tersimpan sebagai catatan. Awali dengan @ untuk memanggil agen, misalnya @KR.');
+        feedback(offline.length ? `${offline.map(initials).join(', ')} belum tersambung ke agen AI, jadi tidak akan membalas.` : !named.length && mentions.length && !tab ? `Melanjutkan dengan ${mentions.map(initials).join(', ')}.` : mentions.length ? '' : 'Pesan tersimpan sebagai catatan. Awali dengan @ untuk memanggil agen, misalnya @KR.');
         try { $('chatInput').value = ''; apply(await call('POST', {text, mentions})); }
         catch (error) { feedback(error.message); $('chatInput').value = text; }
         finally { sending = false; $('chatSend').disabled = false; $('chatInput').focus(); }

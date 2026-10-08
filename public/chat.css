@@ -31,3 +31,7 @@ body{--i-life:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' 
 @media(max-width:560px){.ui #bLife{align-self:center;min-height:44px;width:44px;padding:0;border-radius:12px;font-size:0}.ui #bLife::before{content:'';display:inline-block;width:18px;height:18px;background:currentColor;-webkit-mask:var(--i-life) center/contain no-repeat;mask:var(--i-life) center/contain no-repeat}}
 @media(max-width:420px){.ui #brand strong{font-size:14px;line-height:1.1}.ui #brand .brand-meta{display:none}}
 @media(max-width:420px){.ui #bTasks{font-size:0;padding:0 10px}.ui #bTasks #taskCount{font-size:13px}.ui #bTasks::before{margin-right:6px}}
+#chatTabs{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--line);overflow-x:auto}
+#chatTabs button{position:relative;min-height:36px;padding:6px 14px;border:1px solid var(--line);border-radius:18px;background:#fff;color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+#chatTabs button[aria-selected=true]{background:#0a2a5c;border-color:#0a2a5c;color:#fff}
+#chatTabs button.unread::after{content:'';position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:#c8102e}
