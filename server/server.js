@@ -13,14 +13,19 @@ const agents = require('./agents');
 const PUBLIC = path.join(ROOT, 'public');
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(ROOT, 'data'));
 const TASKS_FILE = path.join(DATA_DIR, 'tasks.json'), CHATS_FILE = path.join(DATA_DIR, 'chats.json');
-const HOST = '127.0.0.1', PORT = Number(process.env.PORT) || 3000;
-const API_KEY = process.env.ANTHROPIC_API_KEY || '';
-const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
-const API_URL = `${process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com'}/v1/messages`;
-const DRY_RUN = !API_KEY || process.env.ANTHROPIC_DRY_RUN === '1';
+const HOST = '0.0.0.0', PORT = Number(process.env.PORT) || 3005;
+const RAW_KEY = process.env.OPENAI_API_KEY || 'sk-97bb92f6bd23bb63-l5k8ko-d3d4218c'; // Diganti sama kunci asli Hermes
+const API_KEY = process.env.ANTHROPIC_API_KEY || RAW_KEY;
+const MODEL = process.env.ANTHROPIC_MODEL || 'ag/gemini-3.8-flash';
+const API_URL = `${process.env.ANTHROPIC_BASE_URL || 'http://127.0.0.1:20128'}/v1/chat/completions`; // Arahkan ke endpoint standar OpenAI yang biasa dipakai 9router
+const DRY_RUN = false; // Memaksa agar AI tetap berjalan meskipun kita pakai key dummy
 const STATES = new Set(['queued', 'active', 'blocked', 'review', 'done']);
 // Which model a member uses: their own, else the .env default.
-const modelOf = agent => agent.model || MODEL;
+const modelOf = agent => {
+  // Paksa semua agen pakai model 9router yang kita atur (fetch-combo / pencarian web lokal)
+  // karena kalau mereka mencoba pakai 'claude-sonnet-5-5' bawaan, 9router akan menolaknya.
+  return MODEL;
+};
 const reviewer = agent => ({...agent,system:`${agent.system}\nFor this peer-feedback task, use these sections instead of your usual reply or caption format: what works, concrete changes, missing facts or questions, and next steps. Review the supplied draft from your role. Do not claim to approve, publish, send, or edit anything. Follow the language of the supplied draft and focus.`});
 
 // ---- storage: one JSON file, written atomically ----
@@ -56,13 +61,41 @@ async function callModel(agent, system, messages) {
   try {
     const response = await fetch(API_URL, {
       method: 'POST', signal: controller.signal,
-      headers: {'content-type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01'},
-      body: JSON.stringify({model: modelOf(agent), max_tokens: 2000, system, messages})
+      headers: {'content-type': 'application/json', 'Authorization': `Bearer ${API_KEY}`},
+      // Tambahkan stream: false agar 9router membalas dengan JSON utuh sekaligus
+      body: JSON.stringify({model: modelOf(agent), stream: false, messages: [{role: 'system', content: system}, ...messages]})
     });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(body?.error?.message || `API Claude mengembalikan ${response.status}`);
-    const answer = (body.content || []).filter(part => part.type === 'text').map(part => part.text).join('\n').trim();
-    if (!answer) throw new Error('Claude mengembalikan jawaban kosong');
+    
+    // Baca respon mentah sebagai string terlebih dulu
+    const text = await response.text();
+    let body = {};
+    try {
+      body = JSON.parse(text);
+    } catch (e) {
+      // Jika ternyata 9router masih ngeyel pakai Server-Sent Events (SSE)
+      if (text.includes('data: {"id"')) {
+        const lines = text.split('\n');
+        let fullAnswer = '';
+        for (const line of lines) {
+          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+            try {
+              const chunk = JSON.parse(line.substring(6));
+              if (chunk.choices && chunk.choices[0] && chunk.choices[0].delta && chunk.choices[0].delta.content) {
+                fullAnswer += chunk.choices[0].delta.content;
+              }
+            } catch (err) {}
+          }
+        }
+        if (fullAnswer) return fullAnswer.trim();
+      }
+      throw new Error('Respons 9router tidak bisa diparsing: ' + text.substring(0, 100));
+    }
+
+    if (!response.ok) throw new Error(body?.error?.message || `API OpenAI/9router mengembalikan ${response.status}`);
+    const answer = body.choices && body.choices[0] && body.choices[0].message && body.choices[0].message.content 
+        ? body.choices[0].message.content.trim() 
+        : '';
+    if (!answer) throw new Error('Model mengembalikan jawaban kosong: ' + JSON.stringify(body).substring(0, 100));
     return answer;
   } finally { clearTimeout(timer); }
 }
