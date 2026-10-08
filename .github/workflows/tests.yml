@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: [server, decisions, worker-reliability, office-life, office-studio, building-view, member-commands, soft-avatar, avatar-stairs, office]
+        test: [server, decisions, worker-reliability, chat, office-life, office-studio, building-view, member-commands, soft-avatar, avatar-stairs, office]
     env:
       # Dry run only: the tests never call the paid API.
       ANTHROPIC_API_KEY: ''

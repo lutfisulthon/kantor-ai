@@ -82,6 +82,8 @@ Tugas terlihat langsung di kantor:
 
 Ketiganya juga berjalan tanpa server (tugas dari localStorage).
 
+**Ngobrol dengan agen:** pilih anggota yang tersambung ke agen AI (titik hijau), lalu klik **Ngobrol** di panel detailnya. Panel chat terbuka di kanan; Enter mengirim, Shift+Enter membuat baris baru. Selama agen membalas, karakternya di 3D menampilkan balon "Mengetik…". Setiap balasan punya tombol **Jadikan tugas**: permintaan Anda menjadi judul tugas, percakapannya menjadi arahan, lalu tugas masuk antrean agen itu dan tetap lewat persetujuan seperti biasa. Riwayat chat per anggota tersimpan di server (`data/chats.json`, 200 pesan terakhir) dan bisa dihapus dengan **Hapus**. Agen hanya membalas satu pesan dalam satu waktu. Tanpa `ANTHROPIC_API_KEY`, balasannya berupa contoh berlabel uji coba. `tests/chat.cjs` menguji API chat, panel chat, dan tombol Jadikan tugas.
+
 Model bawaan adalah `claude-sonnet-5-5`; ganti dengan `ANTHROPIC_MODEL` di `.env`. `tests/server.cjs` menguji alur dry run dari awal sampai akhir, tugas manual, penjaga API, persistensi, dan jalur error agen; tes ini menyalakan servernya sendiri.
 
 ## Struktur
@@ -92,7 +94,8 @@ Model bawaan adalah `claude-sonnet-5-5`; ganti dengan `ANTHROPIC_MODEL` di `.env
 - `public/tasks.js`: tugas, validasi, penyimpanan, filter, dan ekspor.
 - `public/tasks.css`: panel tugas responsif, fokus keyboard, dan gaya formulir.
 - `public/music.js`: komposisi instrumental, kontrol putar/mati, dan volume.
-- `server/server.js`: server lokal (file statis + API tugas) dan pekerja agen AI.
+- `public/chat.js`, `public/chat.css`: panel chat dengan agen AI dan tombol Jadikan tugas.
+- `server/server.js`: server lokal (file statis + API tugas dan chat) dan pekerja agen AI.
 - `server/agents.js`: anggota yang tersambung ke agen AI beserta instruksinya.
 - `public/vendor/three/`: Three.js r128 (`three.min.js` dari paket npm `three@0.128.0`, sama dengan berkas CDN sebelumnya) beserta lisensinya.
 - `.github/workflows/tests.yml`: CI yang menjalankan semua `tests/*.cjs` dalam dry-run tanpa `ANTHROPIC_API_KEY`.

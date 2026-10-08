@@ -1561,7 +1561,9 @@
     const taskHeading=document.createElement('h3');taskHeading.textContent='Tugas aktif';
     const taskTitle=document.createElement('p');taskTitle.id='iActiveTask';
     const taskBrief=document.createElement('p');taskBrief.id='iTaskBrief';
-    taskSection.append(taskHeading,taskTitle,taskBrief,tasks);
+    // Members connected to an AI agent can also be chatted with directly.
+    const chat=document.createElement('button');chat.id='iChat';chat.className='btn';chat.textContent='Ngobrol';chat.hidden=!window.officeTasks.agentFor(agent.n);chat.onclick=()=>window.officeChat.open(agent.n);
+    taskSection.append(taskHeading,taskTitle,taskBrief,tasks,chat);
     info.append(close,heading,role,habit,taskSection,memberCommands(agent),list,pray,view);
     syncTaskDisplay(agent);
   }
@@ -1931,7 +1933,7 @@
     }
     if(selected){
       selected.g.getWorldPosition(world);ring.position.set(world.x,world.y+.07,world.z);ring.visible=!follow&&selected.g.visible&&visibleAgent(selected);
-      $('iLocation').textContent=selected.state==='lift'?`Lift · lantai ${selected.liftTrip.from} ke ${selected.liftTrip.to}`:`Lantai ${selected.floor} · ${FLOOR[selected.floor].name}`;$('iActivity').textContent=agentStatus(selected);
+      if($('iChat'))$('iChat').hidden=!window.officeTasks.agentFor(selected.n);$('iLocation').textContent=selected.state==='lift'?`Lift · lantai ${selected.liftTrip.from} ke ${selected.liftTrip.to}`:`Lantai ${selected.floor} · ${FLOOR[selected.floor].name}`;$('iActivity').textContent=agentStatus(selected);
     }
     for(let level=1;level<=4;level++){
       const count=agents.filter(a=>a.floor===level&&a.state!=='lift').length;
@@ -1954,6 +1956,8 @@
   setFloor(3);viewReady=true;requestAnimationFrame(frame);
   window.officeScene={
     petCat,coffee,
+    // A speech bubble over a member, used by the chat panel while their agent is typing.
+    say:(name,text,seconds=3.5)=>{const a=agents.find(a=>a.n===name);if(a)say(a,text,seconds);},
     applyAppearance,startTour,stopTour,
     reviewMeeting:names=>{const members=names.map(n=>agents.find(a=>a.n===n));if(!members.length||members.length>6||new Set(names).size!==names.length||members.some(a=>!a))return false;return commandMembers(members,'meet');},
     endReview:names=>{const members=names.map(n=>agents.find(a=>a.n===n)).filter(Boolean);if(members.length)commandMembers(members,'work');},
@@ -1972,4 +1976,5 @@
     floorPoint:level=>{const v=new THREE.Vector3(0,2,12.6);floors[level].localToWorld(v);v.project(camera);return {x:(v.x*.5+.5)*innerWidth,y:(-v.y*.5+.5)*innerHeight};}
   };
   window.officeStudio.init(TEAM);
+  window.officeChat.init(TEAM);
 })();

@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="tasks.css">
   <link rel="stylesheet" href="life.css">
   <link rel="stylesheet" href="studio.css">
+  <link rel="stylesheet" href="chat.css">
 </head>
 <body class="ui">
   <canvas id="c" aria-label="Model interaktif kantor empat lantai"></canvas>
@@ -51,6 +52,12 @@
   </section>
   <div id="followBar" class="panel" role="group" aria-label="Kamera karakter" hidden><span id="followName"></span><button class="btn" id="fEyes" aria-pressed="false">Mata</button><button class="btn" id="fChase" aria-pressed="false">Belakang</button><button class="btn" id="fExit">Keluar kamera</button></div>
   <section id="info" class="panel" aria-label="Detail anggota tim" hidden></section>
+  <section id="chat" class="panel" aria-labelledby="chatName" hidden>
+    <header class="chat-head"><div><h2 id="chatName">Ngobrol</h2><p id="chatRole"></p></div><button type="button" class="btn" id="clearChat">Hapus</button><button type="button" class="btn" id="closeChat" aria-label="Tutup obrolan">×</button></header>
+    <div id="chatLog" aria-live="polite"></div>
+    <p id="chatFeedback" role="status"></p>
+    <form id="chatForm"><label for="chatInput" class="sr-only">Pesan</label><textarea id="chatInput" rows="2" maxlength="2000" placeholder="Tulis pesan… (Enter kirim, Shift+Enter baris baru)"></textarea><button type="submit" class="btn primary" id="chatSend">Kirim</button></form>
+  </section>
   <div id="sceneStatus" role="status">Memuat model kantor…</div>
   <footer id="controls" class="panel">
     <div class="simulation-controls"><button class="btn" id="bPause" aria-pressed="false">Jeda</button><button class="btn" id="bRoutine" aria-pressed="true">Rutinitas: nyala</button><button class="btn" id="bLunch">Makan siang</button><button class="btn" id="bRoof">Ke rooftop</button><button class="btn" id="bPray">Waktu salat</button><button class="btn" id="bWork">Kembali bekerja</button></div>
@@ -91,6 +98,7 @@
   <script src="life.js"></script>
   <script src="studio.js"></script>
   <script src="music.js"></script>
+  <script src="chat.js"></script>
   <script src="vendor/three/three.min.js"></script>
   <script src="office.js"></script>
 </body>

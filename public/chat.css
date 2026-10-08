@@ -1,0 +1,19 @@
+/* Chat with one AI member: a side panel that keeps the 3D office visible, so the character can be seen typing. */
+#chat{position:fixed;right:24px;top:110px;bottom:112px;width:clamp(300px,calc(50vw - 420px),400px);display:flex;flex-direction:column;padding:0;z-index:9;overflow:hidden}
+#chat[hidden]{display:none}
+.chat-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.chat-head div{margin-right:auto;min-width:0}.chat-head h2{font-size:17px;margin:0}.chat-head p{margin:2px 0 0;font-size:12px;color:var(--ink-2)}
+#chatLog{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.5}
+#chatLog .empty{color:var(--ink-2)}
+.chat-msg{max-width:88%;padding:9px 12px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.chat-msg.user{align-self:flex-end;background:#0a2a5c;color:#fff;border-bottom-right-radius:3px}
+.chat-msg.agent{align-self:flex-start;background:#eef3fa;color:var(--ink);border:1px solid #d5deec;border-bottom-left-radius:3px}
+.chat-msg.typing{color:var(--ink-2);font-style:italic}
+.chat-msg .chat-meta{display:block;margin-top:6px;font:500 11px var(--mono);opacity:.75}
+.chat-msg button{margin-top:8px;min-height:36px;padding:6px 10px;border:1px solid #0a2a5c;border-radius:5px;background:#fff;color:#0a2a5c;font:inherit;font-size:12px;cursor:pointer}
+#chatForm{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+#chatInput{flex:1;min-height:44px;max-height:140px;resize:vertical;padding:10px;border:1px solid var(--line);border-radius:5px;font:inherit;font-size:13px;background:#fff;color:var(--ink)}
+#chatFeedback{margin:0;padding:0 16px 10px;font-size:12px;color:#0a2a5c}#chatFeedback:empty{display:none}
+body:has(#chat:not([hidden])) #info,body:has(#chat:not([hidden])) #log{display:none}
+@media(max-width:1000px){#chat{left:12px;right:12px;top:auto;bottom:12px;width:auto;height:min(70dvh,560px)}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

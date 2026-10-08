@@ -12,7 +12,7 @@ try { process.loadEnvFile(process.env.ENV_FILE || path.join(ROOT, '.env')); } ca
 const agents = require('./agents');
 const PUBLIC = path.join(ROOT, 'public');
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(ROOT, 'data'));
-const TASKS_FILE = path.join(DATA_DIR, 'tasks.json');
+const TASKS_FILE = path.join(DATA_DIR, 'tasks.json'), CHATS_FILE = path.join(DATA_DIR, 'chats.json');
 const HOST = '127.0.0.1', PORT = Number(process.env.PORT) || 3000;
 const API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
@@ -37,6 +37,11 @@ function save() {
   durable=JSON.stringify(tasks);
   } catch(error) { tasks=JSON.parse(durable); throw error; }
 }
+// Chats: one conversation per connected member, kept in their own file so a broken chat never blocks tasks.
+let chats = {};
+try { chats = JSON.parse(fs.readFileSync(CHATS_FILE, 'utf8')); if (!chats || typeof chats !== 'object' || Array.isArray(chats)) throw new Error('not an object'); }
+catch (error) { if (error.code !== 'ENOENT') { console.error(`Cannot read ${CHATS_FILE}: ${error.message}. Fix or move the file, then restart.`); process.exit(1); } chats = {}; }
+function saveChats() { const tmp = `${CHATS_FILE}.${process.pid}.tmp`; fs.writeFileSync(tmp, JSON.stringify(chats, null, 2)); fs.renameSync(tmp, CHATS_FILE); }
 const now = () => new Date().toISOString();
 const MEMBERS = new Set(['Koh Arman','Koh Wira','Kak Rani','Kak Dewi','Mira','Tari','Bagas Pratama Putra','Rizky Hakim','Yoga','Bang Eko','Gilang','Kak Sinta','Kak Laras']);
 const text = (value, max) => typeof value === 'string' ? value.trim().slice(0, max) : '';
@@ -44,13 +49,15 @@ const text = (value, max) => typeof value === 'string' ? value.trim().slice(0, m
 // ---- agent worker: one task at a time per connected member, oldest first ----
 const busy = new Set();
 async function askClaude(agent, task) {
+  return callModel(agent, agent.system, [{role: 'user', content: `Task: ${task.title}\n\nBrief:\n${task.brief || '(no brief given)'}${task.feedback ? `\n\nPrevious draft:\n${task.result}\n\nRevision requested:\n${task.feedback}` : ''}`}]);
+}
+async function callModel(agent, system, messages) {
   const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 120000);
   try {
     const response = await fetch(API_URL, {
       method: 'POST', signal: controller.signal,
       headers: {'content-type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01'},
-      body: JSON.stringify({model: modelOf(agent), max_tokens: 2000, system: agent.system,
-        messages: [{role: 'user', content: `Task: ${task.title}\n\nBrief:\n${task.brief || '(no brief given)'}${task.feedback ? `\n\nPrevious draft:\n${task.result}\n\nRevision requested:\n${task.feedback}` : ''}`}]})
+      body: JSON.stringify({model: modelOf(agent), max_tokens: 2000, system, messages})
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body?.error?.message || `API Claude mengembalikan ${response.status}`);
@@ -91,6 +98,20 @@ async function work(name) {
   } finally { busy.delete(name); setImmediate(() => work(name)); }
 }
 const kick = () => Object.keys(agents).forEach(work);
+
+// ---- chat: a direct conversation with one connected member ----
+const CHAT_RULES = 'You are now chatting directly with a colleague in the office app, not working on a task. Reply conversationally and briefly, in the language of their last message. Never use the QUESTIONS: format here. Do not claim to have posted, sent, changed or published anything. If the request needs real work, say what you would do and suggest turning it into a task with the "Jadikan tugas" button.';
+const chatting = new Set();
+async function chatReply(name, history) {
+  if (DRY_RUN) {
+    await new Promise(resolve => setTimeout(resolve, Number(process.env.DRY_RUN_DELAY_MS ?? 1200)));
+    return `UJI COBA: ANTHROPIC_API_KEY belum diisi, jadi ini balasan contoh, bukan keluaran AI.\n\nSaya ${agents[name].role}. Pesan Anda: "${history.at(-1).text.slice(0, 200)}". Setelah tersambung ke model, saya akan menjawab sesuai peran saya.`;
+  }
+  // The last 20 messages are enough context; the model needs alternating turns that start with the person.
+  const turns = history.slice(-20).map(m => ({role: m.role === 'user' ? 'user' : 'assistant', content: m.text}));
+  while (turns.length && turns[0].role !== 'user') turns.shift();
+  return callModel(agents[name], `${agents[name].system}\n\n${CHAT_RULES}`, turns);
+}
 
 // ---- HTTP ----
 function send(res, status, body) {
@@ -139,6 +160,27 @@ async function api(req, res, url) {
       notes.push({name,result:answer.slice(0,10000)});
     }
     return send(res,200,{mode:DRY_RUN?'dry-run':'claude',createdAt:now(),notes});
+  }
+  const chatMatch = url.pathname.match(/^\/api\/chat\/([^/]+)$/);
+  if (chatMatch) {
+    let name; try { name = decodeURIComponent(chatMatch[1]); } catch { return send(res, 400, {error: 'Nama tidak valid.'}); }
+    if (!Object.hasOwn(agents, name)) return send(res, 404, {error: 'Anggota ini belum tersambung ke agen AI.'});
+    if (req.method === 'GET') return send(res, 200, {messages: chats[name] || []});
+    if (req.method === 'DELETE') { if (chatting.has(name)) return send(res, 409, {error: 'Tunggu balasan selesai sebelum menghapus obrolan.'}); delete chats[name]; saveChats(); return send(res, 200, {messages: []}); }
+    if (req.method === 'POST') {
+      const message = text((await readJson(req))?.text, 2000);
+      if (!message) return send(res, 400, {error: 'Tulis pesan terlebih dahulu.'});
+      if (chatting.has(name)) return send(res, 409, {error: 'Agen ini masih membalas pesan sebelumnya.'});
+      chatting.add(name);
+      try {
+        const history = chats[name] = [...(chats[name] || []), {role: 'user', text: message, at: now()}].slice(-200); saveChats();
+        let reply;
+        try { reply = (await chatReply(name, history)).slice(0, 10000); }
+        catch (error) { return send(res, 502, {error: error.name === 'AbortError' ? 'Agen terlalu lama menjawab.' : error.message === 'fetch failed' ? 'Tidak dapat menghubungi API model. Periksa koneksi.' : error.message, messages: chats[name]}); }
+        chats[name] = [...chats[name], {role: 'agent', text: reply, at: now(), by: DRY_RUN ? 'dry-run' : modelOf(agents[name])}].slice(-200); saveChats();
+        return send(res, 200, {messages: chats[name]});
+      } finally { chatting.delete(name); }
+    }
   }
   if (url.pathname === '/api/agents' && req.method === 'GET')
     return send(res, 200, {mode: DRY_RUN ? 'dry-run' : 'claude', model: DRY_RUN ? null : MODEL, members: Object.fromEntries(Object.entries(agents).map(([name, a]) => [name, {role: a.role, model: modelOf(a)}]))});
