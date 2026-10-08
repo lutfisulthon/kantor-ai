@@ -45,6 +45,12 @@ const settled=async port=>{for(let i=0;i<80;i++){const s=(await api(port)).body;
     await page.locator('#chatLog .chat-msg.agent').last().getByRole('button',{name:'Jadikan tugas'}).click();
     await page.waitForFunction(()=>window.officeTasks.list().some(t=>t.title==='Tolong buat jawaban untuk pertanyaan jam buka'&&t.assignee==='Kak Sinta'));
     assert.match(await page.locator('#chatFeedback').innerText(),/Tugas dibuat untuk KS/);
+    // Without @, the message goes to whoever was called last.
+    assert.match(await page.getAttribute('#chatInput','placeholder'),/Membalas @KS/);
+    await page.fill('#chatInput','sip, makasih');await page.press('#chatInput','Enter');
+    assert.match(await page.locator('#chatFeedback').innerText(),/Melanjutkan dengan KS/);
+    await page.waitForFunction(()=>document.querySelectorAll('#chatLog .chat-msg:not(.typing)').length===8&&!document.querySelector('#chatLog .typing'));
+    assert.match(await page.locator('#chatLog .chat-msg.agent').last().innerText(),/^KS/);
     await page.screenshot({path:path.join(os.tmpdir(),'kantor-chat.png')});
     // The Ngobrol button on a character opens the room with that member already called.
     await page.click('#closeChat');await page.selectOption('#teamSelect','Koh Arman');assert.equal(await page.isVisible('#iChat'),false,'no chat for simulated members');

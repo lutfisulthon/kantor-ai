@@ -41,6 +41,7 @@
       log.append(item);
     });
     for (const name of replying) log.append(node('p', 'chat-msg agent typing', `${initials(name)} sedang mengetik…`));
+    hint();
     if (atBottom || sending) log.scrollTop = log.scrollHeight;
   }
   // The person's message just before this reply becomes the task title (without the @ calls); the exchange is the brief.
@@ -87,6 +88,9 @@
     input.value = `${input.value.slice(0, picker.start)}@${p.initials} ${input.value.slice(caret)}`;
     const end = picker.start + p.initials.length + 2; input.setSelectionRange(end, end); hidePicker(); input.focus();
   }
+  const lastCalled = () => ([...messages].reverse().find(m => m.role === 'user' && m.mentions?.length)?.mentions || []).filter(connected);
+  // The placeholder says who an un-addressed message will go to.
+  function hint() { const last = lastCalled(); $('chatInput').placeholder = last.length ? `Membalas ${last.map(n => '@' + initials(n)).join(' ')}… ketik @ untuk memanggil agen lain` : 'Tulis pesan… ketik @ untuk memanggil agen'; }
   function open(name) {
     $('chat').hidden = false; feedback('');
     if (name && connected(name)) { const input = $('chatInput'), tag = `@${initials(name)} `; if (!input.value.includes(tag.trim())) input.value = tag + input.value; }
@@ -117,8 +121,10 @@
       $('chatForm').onsubmit = async event => {
         event.preventDefault();
         const text = $('chatInput').value.trim(); if (!text || sending) return;
-        const named = mentionsIn(text), offline = named.filter(n => !connected(n)), mentions = named.filter(connected);
-        sending = true; $('chatSend').disabled = true; feedback(offline.length ? `${offline.map(initials).join(', ')} belum tersambung ke agen AI, jadi tidak akan membalas.` : mentions.length ? '' : 'Pesan tersimpan. Tidak ada agen yang dipanggil; awali dengan @ untuk memanggil.');
+        // Without any @, the message goes to whoever was called last, so a conversation carries on without retyping @.
+        const named = mentionsIn(text), offline = named.filter(n => !connected(n)), mentions = named.length ? named.filter(connected) : lastCalled();
+        sending = true; $('chatSend').disabled = true;
+        feedback(offline.length ? `${offline.map(initials).join(', ')} belum tersambung ke agen AI, jadi tidak akan membalas.` : !named.length && mentions.length ? `Melanjutkan dengan ${mentions.map(initials).join(', ')}.` : mentions.length ? '' : 'Pesan tersimpan sebagai catatan. Awali dengan @ untuk memanggil agen, misalnya @KR.');
         try { $('chatInput').value = ''; apply(await call('POST', {text, mentions})); }
         catch (error) { feedback(error.message); $('chatInput').value = text; }
         finally { sending = false; $('chatSend').disabled = false; $('chatInput').focus(); }
