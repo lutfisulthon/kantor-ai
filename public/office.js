@@ -649,6 +649,15 @@
       for(const [w,d,x,z] of [[33,.05,0,12.55],[33,.05,0,-12.55],[.05,25,16.55,0],[.05,18,-16.55,-3.5],[.05,4,-16.55,10.5]]){
         glazing(w,1.15,d,x,y,z,lg);box(Math.max(w,.12),.08,Math.max(d,.12),CREAM,x,y+1.15,z,lg);
       }
+      // Above the front parapet, as on the real building: the ministry's logo at the left corner and its name in blue letters.
+      const sign=(texture,w,h,x,yy)=>{texture.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false}));m.position.set(x,yy,12.78);lg.add(m);return m;};
+      sign(new THREE.TextureLoader().load('logo-komdigi.png'),2.8,2.8,-14.6,y+2.55);
+      {
+        const c=document.createElement('canvas');c.width=4096;c.height=192;const ctx=c.getContext('2d');
+        ctx.font='800 132px Archivo, system-ui, sans-serif';ctx.fillStyle='#1d5fae';ctx.textBaseline='middle';ctx.fillText('KEMENTERIAN KOMUNIKASI DAN DIGITAL RI',8,100,4080);
+        sign(new THREE.CanvasTexture(c),25.6,1.2,0,y+1.95);
+      }
+      for(const x of [-12,-4,4,12])box(.06,.75,.06,MULLION,x,y+1.23,12.8,lg);
       continue;
     }
     if(level===1)glazing(16.5,h,.05,-8.25,y,12.55,lg);else glazing(33,h,.05,0,y,12.55,lg);
